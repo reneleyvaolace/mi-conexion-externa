@@ -19,8 +19,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Definición de Constantes del Plugin
- *
- * Usamos prefijos MCE_ para evitar colisiones (Regla 3).
  */
 define( 'MCE_VERSION', '1.0.0' );
 define( 'MCE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
@@ -29,37 +27,24 @@ define( 'MCE_PLUGIN_FILE', __FILE__ );
 
 /**
  * Hook de Activación del Plugin.
- *
- * Se dispara una sola vez cuando el plugin es activado.
- * Ideal para configurar opciones por defecto o verificar requisitos.
  */
 function mce_plugin_activate() {
-	// (Próximos pasos: Aquí podríamos verificar la versión de PHP o WP)
 }
 register_activation_hook( MCE_PLUGIN_FILE, 'mce_plugin_activate' );
 
 /**
  * Hook de Desactivación del Plugin.
- *
- * Se dispara una sola vez cuando el plugin es desactivado.
- * Ideal para limpiar 'cron jobs' o 'transients' que hayamos creado.
  */
 function mce_plugin_deactivate() {
-	// (Próximos pasos: Limpiar tareas programadas si las hubiera)
 }
 register_deactivation_hook( MCE_PLUGIN_FILE, 'mce_plugin_deactivate' );
 
 /**
  * Carga del núcleo del Plugin.
- *
- * Usamos el hook 'plugins_loaded' para asegurarnos de que todas las funciones
- * de WordPress y otros plugins estén disponibles.
- *
- * Aquí es donde cargaremos nuestros archivos de 'includes' y 'admin'.
  */
 function mce_load_plugin_core() {
 
-	// Cargar el dominio de texto para traducciones (Regla 3: i18n)
+	// Cargar el dominio de texto para traducciones
 	load_plugin_textdomain(
 		'mi-conexion-externa',
 		false,
@@ -68,15 +53,16 @@ function mce_load_plugin_core() {
 
 	// --- Cargamos nuestros archivos principales ---
 
-	// 1. Cargamos el archivo de la página de ajustes (Solo Admin).
+	// 1. Cargamos el manejador de la BBDD (Global).
+	// (Debe cargarse primero, ya que las páginas de admin dependen de él).
+	require_once MCE_PLUGIN_DIR . 'includes/class-mce-db-handler.php';
+
+	// 2. Cargamos el archivo de la página de ajustes (Solo Admin).
 	require_once MCE_PLUGIN_DIR . 'admin/class-mce-settings-page.php';
 	
 	// *** LÍNEA ACTUALIZADA ***
-	// 2. Cargamos el manejador de la BBDD (Global).
-	require_once MCE_PLUGIN_DIR . 'includes/class-mce-db-handler.php';
-
-	// (Próximos pasos: Aquí incluiremos nuestros archivos de 'includes' si tuviéramos más)
-	// require_once MCE_PLUGIN_DIR . 'includes/mce-functions.php';
+	// 3. Cargamos la nueva página de "Ver Productos" (Solo Admin).
+	require_once MCE_PLUGIN_DIR . 'admin/class-mce-productos-page.php';
 
 }
 // Usamos 'plugins_loaded' para cargar nuestros archivos principales.

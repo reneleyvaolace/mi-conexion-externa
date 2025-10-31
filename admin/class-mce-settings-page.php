@@ -37,7 +37,7 @@ class MCE_Settings_Page {
 	 */
 	public function __construct() {
 		// Hook para añadir el menú de administración.
-		add_action( 'admin_menu', array( $this, 'add_plugin_settings_page' ) );
+		// add_action( 'admin_menu', array( $this, 'add_plugin_settings_page' ) );
 
 		// Hook para registrar nuestros ajustes.
 		add_action( 'admin_init', array( $this, 'register_and_build_fields' ) );
