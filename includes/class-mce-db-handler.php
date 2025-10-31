@@ -35,6 +35,11 @@ class MCE_DB_Handler {
 		$this->db_name = isset( $opts['mce_db_name'] ) ? $opts['mce_db_name'] : '';
 		$this->user    = isset( $opts['mce_db_user'] ) ? $opts['mce_db_user'] : '';
 		$this->pass    = isset( $opts['mce_db_pass'] ) ? $opts['mce_db_pass'] : '';
+
+		// Depuración liviana: confirma qué archivo se carga (temporal).
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( '[MCE INIT] Clase MCE_DB_Handler cargada desde: ' . __FILE__ );
+		}
 	}
 
 	public function __destruct() {
@@ -112,7 +117,6 @@ class MCE_DB_Handler {
 
 	/**
 	 * Obtiene el contenido de una tabla específica (para el Explorador).
-	 * (Código corregido por el usuario)
 	 */
 	public function get_table_content( $table_name, $limit = 100 ) {
 		if ( ! $this->connect() ) {
@@ -137,7 +141,13 @@ class MCE_DB_Handler {
 		$table_name = preg_replace( '/[^A-Za-z0-9_]/', '', $table_name );
 		$limit      = intval( $limit ) > 0 ? intval( $limit ) : 100;
 
-		$sql = "SELECT * FROM \`" . $table_name . "\` LIMIT " . $limit . ";";
+		// CORRECCIÓN: usar comillas simples para la cadena y backticks sin backslashes.
+		$sql = 'SELECT * FROM `' . $table_name . '` LIMIT ' . $limit . ';';
+
+		// Depuración: registrar SQL real antes de preparar (temporal si WP_DEBUG=true)
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( '[MCE DEBUG] get_table_content -> SQL: ' . $sql );
+		}
 
 		$stmt = $this->connection->prepare( $sql );
 		if ( $stmt === false ) {
@@ -173,19 +183,10 @@ class MCE_DB_Handler {
 		return $this->get_table_content( 'mce_productos', 100 );
 	}
 
-
 	/**
-	 * *** ¡NUEVA FUNCIÓN DE PAGINACIÓN! ***
-	 *
-	 * Obtiene datos y el conteo total para una tabla.
-	 *
-	 * @param string $table_name     El nombre de la tabla.
-	 * @param int    $rows_per_page  El 'LIMIT'.
-	 * @param int    $current_page   La página actual (ej. 1, 2, 3).
-	 * @return array|WP_Error
+	 * Obtiene datos paginados y total.
 	 */
 	public function get_paginated_table_data( $table_name, $rows_per_page, $current_page ) {
-		// 1. Conectar
 		if ( ! $this->connect() ) {
 			return new WP_Error(
 				'db_connection_failed',
@@ -194,7 +195,7 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 2. Validar y Sanitizar Tabla (Seguridad Regla 1)
+		// Validar y sanitizar tabla
 		$available_tables = $this->get_tables();
 		if ( is_wp_error( $available_tables ) || ! in_array( $table_name, $available_tables, true ) ) {
 			return new WP_Error(
@@ -205,14 +206,13 @@ class MCE_DB_Handler {
 		}
 		$table_name = preg_replace( '/[^A-Za-z0-9_]/', '', $table_name );
 
-		// 3. Sanitizar Paginación (Seguridad Regla 1)
+		// Sanitizar paginación
 		$rows_per_page = intval( $rows_per_page ) > 0 ? intval( $rows_per_page ) : 10;
 		$current_page  = intval( $current_page ) > 0 ? intval( $current_page ) : 1;
 		$offset        = ( $current_page - 1 ) * $rows_per_page;
 
-		// 4. Consulta 1: Contar el TOTAL de filas
-		$total_rows = 0;
-		$sql_count = "SELECT COUNT(*) FROM \`" . $table_name . "\`;";
+		// Consulta COUNT: usar backticks sin backslashes
+		$sql_count = 'SELECT COUNT(*) FROM `' . $table_name . '`;';
 		$result_count = $this->connection->query( $sql_count );
 
 		if ( $result_count ) {
@@ -226,7 +226,6 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// Si no hay filas, no necesitamos la segunda consulta.
 		if ( $total_rows === 0 ) {
 			return array(
 				'data'       => array(),
@@ -234,9 +233,15 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 5. Consulta 2: Obtener los DATOS de la página actual
-		$sql_data = "SELECT * FROM \`" . $table_name . "\` LIMIT " . $rows_per_page . " OFFSET " . $offset . ";";
-		
+		// Consulta de datos paginados
+		$sql_data = 'SELECT * FROM `' . $table_name . '` LIMIT ' . $rows_per_page . ' OFFSET ' . $offset . ';';
+
+		// Depuración: SQL de paginación
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( '[MCE DEBUG] get_paginated_table_data -> SQL_COUNT: ' . $sql_count );
+			error_log( '[MCE DEBUG] get_paginated_table_data -> SQL_DATA: ' . $sql_data );
+		}
+
 		$stmt = $this->connection->prepare( $sql_data );
 		if ( $stmt === false ) {
 			return new WP_Error(
@@ -245,7 +250,7 @@ class MCE_DB_Handler {
 				$this->connection->error
 			);
 		}
-		
+
 		$stmt->execute();
 		$result_data = $stmt->get_result();
 
@@ -260,7 +265,6 @@ class MCE_DB_Handler {
 		$data = $result_data->fetch_all( MYSQLI_ASSOC );
 		$stmt->close();
 
-		// 6. Devolver el paquete de datos
 		return array(
 			'data'       => $data,
 			'total_rows' => $total_rows,
