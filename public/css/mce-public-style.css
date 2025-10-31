@@ -1,21 +1,19 @@
 /**
  * Estilos públicos para el shortcode de Mi Conexión Externa.
+ *
+ * *** ¡ACTUALIZADO! ***
+ * Añade estilos para el título y los meta-datos.
  */
 
-/* 1. El contenedor de la cuadrícula */
+/* 1. El contenedor de la cuadrícula (Sin cambios) */
 .mce-productos-grid {
 	display: grid;
-	/* * ¡CAMBIO! 
-	 * La regla 'grid-template-columns' se ha eliminado.
-	 * Ahora será definida por el shortcode usando un estilo en línea
-	 * basado en el atributo [columnas="..."]
-	 */
-	gap: 25px; /* Espacio entre las tarjetas */
+	gap: 25px;
 	width: 100%;
 	margin-top: 20px;
 }
 
-/* 2. La tarjeta individual */
+/* 2. La tarjeta individual (Sin cambios) */
 .mce-producto-card {
 	background: #ffffff;
 	border: 1px solid #e0e0e0;
@@ -32,42 +30,66 @@
 	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
-/* 3. El contenido de la tarjeta (Sin cambios) */
-.mce-producto-card h3 {
+/* 3. ¡NUEVO! Estilo para el Título (llave_titulo) */
+.mce-producto-card .mce-card-title {
 	font-size: 1.25rem;
 	font-weight: 600;
 	margin-top: 0;
-	margin-bottom: 10px;
-	color: #111;
-}
-
-.mce-producto-card .mce-sku {
-	font-size: 0.85rem;
-	color: #666;
 	margin-bottom: 15px;
-	font-family: monospace;
+	color: #111;
+	/* El título se alinea solo */
 }
 
-.mce-producto-card .mce-details {
-	margin-top: auto; 
-	padding-top: 15px;
-	border-top: 1px solid #f0f0f0;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-}
-
-.mce-producto-card .mce-price {
-	font-size: 1.2rem;
-	font-weight: 700;
-	color: #0051d2; 
-}
-
-.mce-producto-card .mce-stock {
+/* 4. ¡NUEVO! Contenedor para el resto de los datos */
+.mce-producto-card .mce-card-meta {
 	font-size: 0.9rem;
-	font-weight: 500;
 	color: #333;
+	margin-top: auto; /* Empuja esto al fondo si la tarjeta crece */
+}
+
+/* 5. ¡NUEVO! Estilo para cada par Clave/Valor */
+.mce-card-item {
+	display: flex;
+	justify-content: space-between; /* Clave a la izq, Valor a la der */
+	padding: 8px 0;
+	border-bottom: 1px solid #f0f0f0;
+}
+.mce-card-item:last-child {
+	border-bottom: none;
+}
+
+.mce-card-item strong {
+	color: #555;
+	margin-right: 10px;
+	text-transform: capitalize; /* Pone la 'llave' en mayúscula: Sku: */
+}
+
+.mce-card-item span {
+	text-align: right;
+	font-weight: 500;
+}
+
+/* 6. ¡NUEVO! Estilo para un valor SIN etiqueta (ocultar_etiquetas) */
+.mce-card-item.mce-item-no-label {
+	justify-content: flex-start; /* Quita el space-between */
+	font-size: 1rem;
+	font-weight: 500;
+	padding-top: 4px;
+	padding-bottom: 4px;
+}
+
+/* 7. ¡NUEVO! Estilo para el enlace PDF */
+.mce-pdf-link {
+	display: inline-block;
 	background: #f4f4f4;
 	padding: 3px 8px;
 	border-radius: 4px;
+	text-decoration: none;
+	font-weight: 500;
+	color: #0051d2;
+	transition: background 0.2s ease;
+}
+.mce-pdf-link:hover {
+	background: #e0e0e0;
+	color: #000;
 }
