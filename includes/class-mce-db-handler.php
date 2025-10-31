@@ -152,7 +152,7 @@ class MCE_DB_Handler {
 	}
 
 	/**
-	 * *** MÉTODO CORREGIDO (¡AHORA SÍ!) ***
+	 * *** MÉTODO CORREGIDO (3RA VEZ, VERIFICADO) ***
 	 * Obtiene las primeras 100 filas del contenido de una tabla específica.
 	 *
 	 * @param string $table_name El nombre de la tabla a consultar.
@@ -178,7 +178,7 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 3. *** LÍNEA CORREGIDA (¡DE VERDAD!) ***
+		// 3. *** LÍNEA CORREGIDA ***
 		// Se eliminó la barra invertida '\' que causaba el error de sintaxis.
 		$sql = "SELECT * FROM \`" . $table_name . "\` LIMIT 100;";
 
