@@ -13,76 +13,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Clase MCE_Query_Page
  *
- * Crea el menú de nivel superior y la página para explorar la BBDD.
+ * No tiene hooks, solo un método público 'render'
+ * que es llamado por el cargador principal del admin.
  */
 class MCE_Query_Page {
 
 	/**
-	 * Almacena el objeto de la página de ajustes.
-	 *
-	 * @var MCE_Settings_Page
-	 */
-	private $settings_page;
-
-	/**
-	 * El Constructor. Acepta la dependencia de la pág de ajustes.
-	 *
-	 * @param MCE_Settings_Page $settings_page La instancia de la página de ajustes.
-	 */
-	public function __construct( $settings_page ) {
-		$this->settings_page = $settings_page;
-		add_action( 'admin_menu', array( $this, 'register_admin_pages' ) );
-	}
-
-	/**
-	 * Registra las páginas de administración.
-	 */
-	public function register_admin_pages() {
-		// 1. Añadir el Menú de Nivel Superior
-		add_menu_page(
-			__( 'Conexión Externa', 'mi-conexion-externa' ),
-			__( 'Conexión Externa', 'mi-conexion-externa' ),
-			'manage_options',
-			'mce-main-menu',
-			array( $this, 'create_query_page_content' ),
-			'dashicons-database-view',
-			20
-		);
-
-		// 2. Añadir la página de "Explorador" como submenú
-		add_submenu_page(
-			'mce-main-menu',
-			__( 'Explorador de BBDD', 'mi-conexion-externa' ),
-			__( 'Explorador', 'mi-conexion-externa' ),
-			'manage_options',
-			'mce-main-menu',
-			array( $this, 'create_query_page_content' )
-		);
-
-		// 3. Añadir nuestra página de "Ajustes"
-		add_submenu_page(
-			'mce-main-menu',
-			__( 'Ajustes de Conexión', 'mi-conexion-externa' ),
-			__( 'Ajustes', 'mi-conexion-externa' ),
-			'manage_options',
-			'mce-settings', // El slug debe coincidir.
-			array( $this->settings_page, 'create_settings_page_content' ) // Callback correcto.
-		);
-	}
-
-
-	/**
-	 * *** MÉTODO ACTUALIZADO ***
 	 * Renderiza el contenido HTML de la página "Explorador".
-	 * Ahora tiene dos vistas: Lista de Tablas o Contenido de Tabla.
 	 */
 	public function create_query_page_content() {
 		// Instanciar nuestro manejador de BBDD
 		$db_handler = new MCE_DB_Handler();
 		
-		// Comprobar si estamos viendo una tabla específica (Regla 1: Sanitización)
+		// Comprobar si estamos viendo una tabla específica
 		$view_table = isset( $_GET['view_table'] ) ? sanitize_text_field( $_GET['view_table'] ) : null;
-
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( __( 'Explorador de la Base de Datos Externa', 'mi-conexion-externa' ) ); ?></h1>
@@ -97,7 +41,7 @@ class MCE_Query_Page {
 
 				$data = $db_handler->get_table_content( $view_table );
 
-				// Manejar Errores (ej. nombre de tabla inválido)
+				// Manejar Errores
 				if ( is_wp_error( $data ) ) :
 					$this->render_error( $data, __( 'Error al Cargar el Contenido:', 'mi-conexion-externa' ) );
 				
@@ -137,7 +81,7 @@ class MCE_Query_Page {
 
 				$tables = $db_handler->get_tables();
 
-				// Manejar Errores (ej. fallo de conexión)
+				// Manejar Errores
 				if ( is_wp_error( $tables ) ) :
 					$this->render_error( $tables, __( 'Error al Cargar las Tablas:', 'mi-conexion-externa' ) );
 				
@@ -155,7 +99,7 @@ class MCE_Query_Page {
 					<ul style="list-style: disc; padding-left: 20px;">
 						<?php
 						foreach ( $tables as $table ) :
-							// Construir la URL para esta tabla (Regla 1: esc_url, esc_attr)
+							// Construir la URL para esta tabla
 							$table_url = add_query_arg(
 								array(
 									'page'       => 'mce-main-menu',
@@ -183,9 +127,6 @@ class MCE_Query_Page {
 
 	/**
 	 * Función auxiliar para renderizar un WP_Error de forma limpia.
-	 *
-	 * @param WP_Error $error El objeto de error.
-	 * @param string   $title El título del error.
 	 */
 	private function render_error( $error, $title ) {
 		?>

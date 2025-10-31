@@ -37,7 +37,7 @@ register_activation_hook( MCE_PLUGIN_FILE, 'mce_plugin_activate' );
  */
 function mce_plugin_deactivate() {
 }
-register_deactivation_hook( MCE_PLUGIN_FILE, 'mce_plugin_deactivate' );
+register_activation_hook( MCE_PLUGIN_FILE, 'mce_plugin_deactivate' );
 
 /**
  * Carga del núcleo del Plugin.
@@ -52,42 +52,29 @@ function mce_load_plugin_core() {
 	);
 
 	// --- 1. Cargamos los archivos de clases GLOBALES ---
-	// El "cerebro" (Manejador de BBDD)
 	require_once MCE_PLUGIN_DIR . 'includes/class-mce-db-handler.php';
-	
-	// El Shortcode (Plan A)
 	require_once MCE_PLUGIN_DIR . 'includes/mce-shortcodes.php';
 
-	// --- 2. Cargamos los archivos de ADMIN ---
+	// --- 2. Cargamos el núcleo del ADMIN ---
+	// (Esta refactorización carga un solo archivo que maneja el resto)
 	if ( is_admin() ) {
-		require_once MCE_PLUGIN_DIR . 'admin/class-mce-settings-page.php';
-		require_once MCE_PLUGIN_DIR . 'admin/class-mce-query-page.php';
-		
-		// Instanciamos
-		$mce_settings = new MCE_Settings_Page();
-		$mce_query_page = new MCE_Query_Page( $mce_settings );
+		require_once MCE_PLUGIN_DIR . 'admin/class-mce-admin-loader.php';
+		new MCE_Admin_Loader();
 	}
 	
-	// *** ¡NUEVA LÓGICA! ***
-	// 3. Cargamos el "Plan B" (Integración Pro) solo si Elementor Pro está activo.
-	// Usamos el hook 'plugins_loaded' con prioridad 11 para asegurarnos
-	// de que Elementor Pro ya se haya cargado (que se carga en prioridad 10).
+	// 3. Cargamos la integración de Elementor Pro (condicional)
 	add_action( 'plugins_loaded', 'mce_load_elementor_pro_integration', 11 );
 }
-// Usamos 'plugins_loaded' para cargar nuestros archivos principales.
 add_action( 'plugins_loaded', 'mce_load_plugin_core' );
 
 
 /**
  * Función de carga condicional para la integración de Elementor Pro.
+ * (Sin cambios)
  */
 function mce_load_elementor_pro_integration() {
-	// (Regla 1: Mejor Práctica de Carga Condicional)
-	// Esta constante 'ELEMENTOR_PRO_VERSION' solo existe si Elementor Pro
-	// está instalado y activo.
 	if ( defined( 'ELEMENTOR_PRO_VERSION' ) ) {
 		require_once MCE_PLUGIN_DIR . 'includes/class-mce-elementor-integration.php';
-		// Instanciamos la clase de integración para que se enganche.
 		new MCE_Elementor_Integration();
 	}
 }

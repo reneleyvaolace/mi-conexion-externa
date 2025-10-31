@@ -13,8 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Clase MCE_Settings_Page
  *
- * Encapsula la creación de la página de ajustes del plugin
- * bajo el menú "Ajustes" de WordPress.
+ * Esta clase ahora solo registra los campos y dibuja la página.
+ * Los hooks 'admin_menu' se han movido al cargador principal.
  */
 class MCE_Settings_Page {
 
@@ -26,18 +26,9 @@ class MCE_Settings_Page {
 	private $options;
 
 	/**
-	 * Almacena el 'slug' de nuestra página de ajustes.
-	 *
-	 * @var string
-	 */
-	private $settings_page_slug = 'mce-settings';
-
-	/**
 	 * Constructor.
 	 *
-	 * *** CAMBIO: Ya no se engancha a 'admin_menu' ***
-	 * Esta clase ya no crea su propio menú. Solo registra
-	 * los campos de configuración.
+	 * Registra los hooks para los campos, AJAX y scripts.
 	 */
 	public function __construct() {
 		// Hook para registrar nuestros ajustes.
@@ -57,8 +48,8 @@ class MCE_Settings_Page {
 	 */
 	public function enqueue_admin_scripts( $hook_suffix ) {
 		// Comprueba si estamos en nuestra página de ajustes.
-		// *** CAMBIO: Ahora buscamos el hook de nuestro nuevo menú padre ***
-		if ( 'toplevel_page_mce-main-menu' !== $hook_suffix && 'conexion-externa_page_mce-settings' !== $hook_suffix ) {
+		// El hook para un submenú es 'toplevel_page_[slug_padre]_page_[slug_hijo]'
+		if ( 'conexion-externa_page_mce-settings' !== $hook_suffix ) {
 			return;
 		}
 
@@ -95,20 +86,8 @@ class MCE_Settings_Page {
 		);
 	}
 
-
-	/**
-	 * *** CAMBIO: Esta función ahora es 'public' ***
-	 * pero ya no es llamada por un 'add_action' en esta clase.
-	 * Será llamada por la clase 'MCE_Query_Page'.
-	 */
-	public function add_plugin_settings_page() {
-		// Esta función ya no es necesaria aquí.
-		// El menú se añade en 'MCE_Query_Page'.
-	}
-
 	/**
 	 * Renderiza el contenido HTML de la página de ajustes.
-	 * Esta función es AHORA 'public' para ser llamada desde otra clase.
 	 */
 	public function create_settings_page_content() {
 		$this->options = get_option( 'mce_db_settings' );
@@ -329,6 +308,3 @@ class MCE_Settings_Page {
 		}
 	}
 }
-
-// *** CAMBIO: Ya no hay 'if (is_admin())' aquí. ***
-// La instanciación se moverá al archivo principal.
