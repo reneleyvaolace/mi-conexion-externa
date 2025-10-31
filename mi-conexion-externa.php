@@ -53,19 +53,26 @@ function mce_load_plugin_core() {
 
 	// --- 1. Cargamos los archivos de clases ---
 	require_once MCE_PLUGIN_DIR . 'includes/class-mce-db-handler.php';
-	require_once MCE_PLUGIN_DIR . 'admin/class-mce-settings-page.php';
-	require_once MCE_PLUGIN_DIR . 'admin/class-mce-query-page.php';
+	
+	// *** LÍNEA ACTUALIZADA ***
+	// 2. Cargamos el archivo de shortcodes (Global).
+	require_once MCE_PLUGIN_DIR . 'includes/mce-shortcodes.php';
 
 	// --- 2. Instanciamos las clases solo si estamos en el Admin ---
-	// *** ESTA ES LA NUEVA LÓGICA DE "CABLEADO" ***
 	if ( is_admin() ) {
-		// 1. Creamos la página de Ajustes.
+		// Cargamos los archivos solo de admin
+		require_once MCE_PLUGIN_DIR . 'admin/class-mce-settings-page.php';
+		require_once MCE_PLUGIN_DIR . 'admin/class-mce-query-page.php';
+		
+		// Instanciamos
 		$mce_settings = new MCE_Settings_Page();
-
-		// 2. Creamos la página del Explorador y le "inyectamos"
-		//    la página de ajustes para que pueda manejar el menú.
 		$mce_query_page = new MCE_Query_Page( $mce_settings );
 	}
+	
+	// (Aquí irá la lógica para cargar la integración de Elementor Pro)
+	// if ( defined( 'ELEMENTOR_PRO_VERSION' ) ) {
+	// 	require_once MCE_PLUGIN_DIR . 'includes/class-mce-elementor-integration.php';
+	// }
 }
 // Usamos 'plugins_loaded' para cargar nuestros archivos principales.
 add_action( 'plugins_loaded', 'mce_load_plugin_core' );
