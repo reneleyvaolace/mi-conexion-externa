@@ -67,10 +67,13 @@ function mce_load_plugin_core() {
 		dirname( plugin_basename( MCE_PLUGIN_FILE ) ) . '/languages/'
 	);
 
-	// (Próximos pasos: Aquí incluiremos nuestros archivos)
+	// *** LÍNEA ACTUALIZADA ***
+	// Cargamos el archivo de la página de ajustes.
+	require_once MCE_PLUGIN_DIR . 'admin/class-mce-settings-page.php';
+	
+	// (Próximos pasos: Aquí incluiremos nuestros archivos de 'includes')
 	// require_once MCE_PLUGIN_DIR . 'includes/mce-functions.php';
 	// require_once MCE_PLUGIN_DIR . 'includes/class-mce-api-handler.php';
-	// require_once MCE_PLUGIN_DIR . 'admin/class-mce-settings-page.php';
 
 }
 // Usamos 'plugins_loaded' para cargar nuestros archivos principales.
