@@ -12,16 +12,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * 1. REGISTRAR LOS ESTILOS
- *
- * Registramos nuestro CSS público. No lo "encolamos" (enqueue) aún.
- * Solo lo dejamos "listo" para que el shortcode lo llame si lo necesita.
+ * (Sin cambios)
  */
 function mce_register_public_styles() {
 	wp_register_style(
-		'mce-public-style', // El "nombre" de nuestro estilo.
-		MCE_PLUGIN_URL . 'public/css/mce-public-style.css', // Ruta al archivo
-		array(), // Dependencias (ninguna)
-		MCE_VERSION // Versión
+		'mce-public-style',
+		MCE_PLUGIN_URL . 'public/css/mce-public-style.css',
+		array(),
+		MCE_VERSION
 	);
 }
 add_action( 'wp_enqueue_scripts', 'mce_register_public_styles' );
@@ -29,13 +27,12 @@ add_action( 'wp_enqueue_scripts', 'mce_register_public_styles' );
 
 /**
  * 2. REGISTRAR EL SHORTCODE
- *
- * Esta función le dice a WordPress sobre nuestro shortcode.
+ * (Sin cambios)
  */
 function mce_register_shortcodes() {
 	add_shortcode(
-		'mostrar_mce_productos', // El shortcode que escribirás: [mostrar_mce_productos]
-		'mce_render_productos_shortcode' // La función que se ejecutará
+		'mostrar_mce_productos',
+		'mce_render_productos_shortcode'
 	);
 }
 add_action( 'init', 'mce_register_shortcodes' );
@@ -44,40 +41,60 @@ add_action( 'init', 'mce_register_shortcodes' );
 /**
  * 3. LA LÓGICA DE RENDERIZADO DEL SHORTCODE
  *
- * Esto es lo que se ejecuta cuando WordPress encuentra [mostrar_mce_productos].
+ * *** ¡ACTUALIZADO! ***
+ * Ahora acepta el atributo [columnas]
  */
 function mce_render_productos_shortcode( $atts ) {
 
-	// 1. Obtener los datos usando nuestro "cerebro".
+	// *** ¡NUEVO! ***
+	// 1. Parsear los atributos del shortcode (Regla 1: WordPress Way)
+	// Establecemos un valor por defecto de 3 columnas si no se especifica.
+	$a = shortcode_atts(
+		array(
+			'columnas' => 3,
+		),
+		$atts
+	);
+
+	// 2. Sanitizar el atributo (Regla 1: Seguridad)
+	// Nos aseguramos de que sea un número entero.
+	$columnas = intval( $a['columnas'] );
+	if ( $columnas < 1 || $columnas > 6 ) {
+		$columnas = 3; // Forzamos un valor seguro entre 1 y 6.
+	}
+
+	// 3. Obtener los datos usando nuestro "cerebro".
 	$db_handler = new MCE_DB_Handler();
 	$productos = $db_handler->get_productos();
 
-	// 2. Manejar Errores (Conexión, etc.)
+	// 4. Manejar Errores
 	if ( is_wp_error( $productos ) ) {
-		// Mostrar un error solo a los administradores.
 		if ( current_user_can( 'manage_options' ) ) {
 			return '<p style="color:red;">' . esc_html( __( 'Error del Plugin [MCE]:', 'mi-conexion-externa' ) . ' ' . $productos->get_error_message() ) . '</p>';
 		}
-		return ''; // No mostrar nada al público.
+		return '';
 	}
 
-	// 3. Manejar Tabla Vacía
+	// 5. Manejar Tabla Vacía
 	if ( empty( $productos ) ) {
-		return '<p>' . esc_html__( 'No hay productos para mostrar en este momento.', 'mi-conexion-externa' ) . '</p>';
+		return '<p>' . esc_html( __( 'No hay productos para mostrar en este momento.', 'mi-conexion-externa' ) . '</p>';
 	}
 
-	// 4. *** ¡ÉXITO! Hay productos. ***
-	// Ahora que sabemos que vamos a mostrar algo, le decimos a WordPress
-	// que cargue nuestro archivo CSS en esta página.
+	// 6. ¡Éxito! Cargar el CSS.
 	wp_enqueue_style( 'mce-public-style' );
 
-	// 5. Construir el HTML.
-	// Usamos un "output buffer" (Regla 1) para capturar todo el
-	// HTML y devolverlo como una sola cadena de texto.
+	// 7. *** ¡NUEVO! ***
+	// Crear el estilo en línea basado en el atributo.
+	$inline_style = sprintf(
+		'grid-template-columns: repeat(%d, 1fr);',
+		$columnas
+	);
+
+	// 8. Construir el HTML.
 	ob_start();
 	?>
 
-	<div class="mce-productos-grid">
+	<div class="mce-productos-grid" style="<?php echo esc_attr( $inline_style ); ?>">
 
 		<?php foreach ( $productos as $producto ) : ?>
 			
@@ -104,6 +121,6 @@ function mce_render_productos_shortcode( $atts ) {
 				</div> </div> <?php endforeach; ?>
 
 	</div> <?php
-	// 6. Devolver el HTML capturado.
+	// 9. Devolver el HTML capturado.
 	return ob_get_clean();
 }

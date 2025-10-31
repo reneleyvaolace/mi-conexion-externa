@@ -5,9 +5,11 @@
 /* 1. El contenedor de la cuadrícula */
 .mce-productos-grid {
 	display: grid;
-	/* Crea columnas automáticas. Cada una tendrá un mínimo de 280px */
-	/* y un máximo de 1fr (lo que sobre). Se ajusta solo. */
-	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	/* * ¡CAMBIO! 
+	 * La regla 'grid-template-columns' se ha eliminado.
+	 * Ahora será definida por el shortcode usando un estilo en línea
+	 * basado en el atributo [columnas="..."]
+	 */
 	gap: 25px; /* Espacio entre las tarjetas */
 	width: 100%;
 	margin-top: 20px;
@@ -30,9 +32,8 @@
 	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
-/* 3. El contenido de la tarjeta */
+/* 3. El contenido de la tarjeta (Sin cambios) */
 .mce-producto-card h3 {
-	/* Estilo para el nombre del producto */
 	font-size: 1.25rem;
 	font-weight: 600;
 	margin-top: 0;
@@ -41,7 +42,6 @@
 }
 
 .mce-producto-card .mce-sku {
-	/* Estilo para el SKU */
 	font-size: 0.85rem;
 	color: #666;
 	margin-bottom: 15px;
@@ -49,8 +49,7 @@
 }
 
 .mce-producto-card .mce-details {
-	/* Contenedor para precio y stock */
-	margin-top: auto; /* Empuja esto al fondo de la tarjeta */
+	margin-top: auto; 
 	padding-top: 15px;
 	border-top: 1px solid #f0f0f0;
 	display: flex;
@@ -59,14 +58,12 @@
 }
 
 .mce-producto-card .mce-price {
-	/* Estilo para el precio */
 	font-size: 1.2rem;
 	font-weight: 700;
-	color: #0051d2; /* Un azul */
+	color: #0051d2; 
 }
 
 .mce-producto-card .mce-stock {
-	/* Estilo para el stock */
 	font-size: 0.9rem;
 	font-weight: 500;
 	color: #333;
