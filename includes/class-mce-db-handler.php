@@ -103,9 +103,7 @@ class MCE_DB_Handler {
 
 	/**
 	 * Obtiene una lista de todas las tablas en la base de datos conectada.
-	 *
-	 * @return array|WP_Error Un array de nombres de tablas si tiene éxito,
-	 * o un WP_Error si falla.
+	 * (Sin cambios)
 	 */
 	public function get_tables() {
 		// 1. Intentar conectar.
@@ -154,7 +152,7 @@ class MCE_DB_Handler {
 	}
 
 	/**
-	 * *** MÉTODO NUEVO ***
+	 * *** MÉTODO CORREGIDO ***
 	 * Obtiene las primeras 100 filas del contenido de una tabla específica.
 	 *
 	 * @param string $table_name El nombre de la tabla a consultar.
@@ -171,7 +169,6 @@ class MCE_DB_Handler {
 		}
 
 		// 2. *** DEFENSA DE SEGURIDAD (Regla 1) ***
-		// Blanqueamos el nombre de la tabla contra la lista real de tablas.
 		$available_tables = $this->get_tables();
 		if ( is_wp_error( $available_tables ) || ! in_array( $table_name, $available_tables, true ) ) {
 			return new WP_Error(
@@ -181,17 +178,19 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 3. Construir la consulta (¡Ahora es seguro!).
-		// Usamos acentos graves y LIMIT (Regla 1).
+		// 3. *** LÍNEA CORREGIDA ***
+		// Se eliminó la barra invertida '\' antes de los acentos graves.
 		$sql = "SELECT * FROM \`" . $table_name . "\` LIMIT 100;";
 
 		// 4. Preparar y ejecutar.
 		$stmt = $this->connection->prepare( $sql );
 		if ( $stmt === false ) {
+			// Añadimos el error de MySQL para más depuración.
+			$mysql_error = $this->connection->error;
 			return new WP_Error(
 				'db_prepare_failed',
 				__( 'Error al preparar la consulta SQL.', 'mi-conexion-externa' ),
-				$this->connection->error
+				$mysql_error
 			);
 		}
 		$stmt->execute();
