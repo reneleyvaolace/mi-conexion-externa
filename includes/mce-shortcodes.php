@@ -44,7 +44,7 @@ add_action( 'init', 'mce_register_shortcodes' );
  * 3. LA LÓGICA DE RENDERIZADO DEL SHORTCODE
  *
  * *** ¡REFRACTORIZADO! ***
- * Ahora acepta el atributo 'llave_titulo'.
+ * Ahora acepta el atributo 'ocultar_etiquetas'.
  */
 function mce_render_tabla_shortcode( $atts ) {
 
@@ -54,34 +54,43 @@ function mce_render_tabla_shortcode( $atts ) {
 	}
 
 	// 2. Parsear los atributos del shortcode
-	// *** ¡NUEVO! Se añade 'llave_titulo' ***
+	// *** ¡NUEVO! Se añade 'ocultar_etiquetas' ***
 	$a = shortcode_atts(
 		array(
-			'tabla'            => '',
-			'columnas'         => 3,
-			'limite'           => 10,
-			'columnas_mostrar' => '',
-			'llave_titulo'     => '', // Nuevo: string vacío por defecto
+			'tabla'             => '',
+			'columnas'          => 3,
+			'limite'            => 10,
+			'columnas_mostrar'  => '',
+			'llave_titulo'      => '',
+			'ocultar_etiquetas' => '', // Nuevo: string vacío por defecto
 		),
 		$atts
 	);
 
 	// 3. Sanitizar todos los atributos (Regla 1: Seguridad)
-	$tabla                = sanitize_text_field( $a['tabla'] );
-	$columnas             = intval( $a['columnas'] );
-	$limite               = intval( $a['limite'] );
-	$columnas_a_mostrar_str = sanitize_text_field( $a['columnas_mostrar'] );
-	$llave_titulo         = sanitize_text_field( $a['llave_titulo'] ); // Nuevo
+	$tabla                   = sanitize_text_field( $a['tabla'] );
+	$columnas                = intval( $a['columnas'] );
+	$limite                  = intval( $a['limite'] );
+	$columnas_a_mostrar_str    = sanitize_text_field( $a['columnas_mostrar'] );
+	$llave_titulo            = sanitize_text_field( $a['llave_titulo'] );
+	$etiquetas_a_ocultar_str = sanitize_text_field( $a['ocultar_etiquetas'] ); // Nuevo
 
 	// Forzar valores seguros
 	if ( $columnas < 1 || $columnas > 6 ) { $columnas = 3; }
 	if ( $limite <= 0 ) { $limite = 10; }
 
-	// 4. Convertir el string 'columnas_mostrar' en un array limpio
+	// 4. Convertir los strings de atributos en arrays limpios
 	$columnas_a_mostrar = array();
 	if ( ! empty( $columnas_a_mostrar_str ) ) {
 		$temp_array = explode( ',', $columnas_a_mostrar_str );
 		$columnas_a_mostrar = array_map( 'trim', $temp_array );
+	}
+
+	// ¡NUEVO!
+	$etiquetas_a_ocultar = array();
+	if ( ! empty( $etiquetas_a_ocultar_str ) ) {
+		$temp_array = explode( ',', $etiquetas_a_ocultar_str );
+		$etiquetas_a_ocultar = array_map( 'trim', $temp_array );
 	}
 
 	// 5. Obtener los datos usando nuestro "cerebro".
@@ -121,15 +130,13 @@ function mce_render_tabla_shortcode( $atts ) {
 			<div class="mce-producto-card">
 				
 				<?php
-				// *** ¡NUEVA LÓGICA DE TÍTULO! ***
 				// Primero, buscamos y mostramos el TÍTULO.
 				if ( ! empty( $llave_titulo ) && isset( $row[ $llave_titulo ] ) ) {
 					echo '<h3 class="mce-card-title">' . esc_html( $row[ $llave_titulo ] ) . '</h3>';
 				}
 
-				// *** ¡NUEVA LÓGICA DE DATOS! ***
 				// Segundo, mostramos el resto de los datos.
-				echo '<div class="mce-card-meta">'; // Envolvemos los datos en un 'meta'
+				echo '<div class="mce-card-meta">';
 				
 				foreach ( $row as $key => $value ) : // Iterar sobre las columnas (key => value)
 					
@@ -142,10 +149,21 @@ function mce_render_tabla_shortcode( $atts ) {
 					if ( $key === $llave_titulo ) {
 						continue;
 					}
+
+					// *** ¡NUEVA LÓGICA DE ETIQUETA! ***
+					$mostrar_etiqueta = ! in_array( $key, $etiquetas_a_ocultar, true );
+					$clase_css_item = $mostrar_etiqueta ? 'mce-card-item' : 'mce-card-item mce-item-no-label';
 					?>
 
-					<div class="mce-card-item">
-						<strong><?php echo esc_html( $key ); ?>:</strong>
+					<div class="<?php echo esc_attr( $clase_css_item ); ?>">
+						
+						<?php
+						// Condición 3: Mostrar la etiqueta solo si se debe.
+						if ( $mostrar_etiqueta ) :
+							?>
+							<strong><?php echo esc_html( $key ); ?>:</strong>
+						<?php endif; ?>
+
 						<span>
 							<?php
 							// Lógica de detección de PDF
