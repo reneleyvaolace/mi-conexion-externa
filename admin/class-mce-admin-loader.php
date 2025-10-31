@@ -17,26 +17,17 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class MCE_Admin_Loader {
 
-	/**
-	 * Instancia de la página de Ajustes.
-	 *
-	 * @var MCE_Settings_Page
-	 */
 	private $settings_page;
-
-	/**
-	 * Instancia de la página de Explorador.
-	 *
-	 * @var MCE_Query_Page
-	 */
 	private $query_page;
-
-	/**
-	 * Instancia de la página de Ayuda.
-	 *
-	 * @var MCE_Help_Page
-	 */
 	private $help_page;
+	
+	/**
+	 * *** ¡NUEVO! ***
+	 * Instancia de la página de CSS.
+	 *
+	 * @var MCE_CSS_Page
+	 */
+	private $css_page;
 
 	/**
 	 * Constructor. Carga las dependencias y se engancha.
@@ -46,11 +37,13 @@ class MCE_Admin_Loader {
 		require_once MCE_PLUGIN_DIR . 'admin/class-mce-settings-page.php';
 		require_once MCE_PLUGIN_DIR . 'admin/class-mce-query-page.php';
 		require_once MCE_PLUGIN_DIR . 'admin/class-mce-help-page.php';
+		require_once MCE_PLUGIN_DIR . 'admin/class-mce-css-page.php'; // *** NUEVA LÍNEA ***
 
 		// 2. Instanciar las clases
 		$this->settings_page = new MCE_Settings_Page();
 		$this->query_page    = new MCE_Query_Page();
 		$this->help_page     = new MCE_Help_Page();
+		$this->css_page      = new MCE_CSS_Page(); // *** NUEVA LÍNEA ***
 
 		// 3. Engancharse al hook del menú
 		add_action( 'admin_menu', array( $this, 'register_admin_pages' ) );
@@ -77,7 +70,7 @@ class MCE_Admin_Loader {
 			__( 'Explorador de BBDD', 'mi-conexion-externa' ),
 			__( 'Explorador', 'mi-conexion-externa' ),
 			'manage_options',
-			'mce-main-menu', // Slug (el mismo que el padre para que sea la pág. por defecto)
+			'mce-main-menu',
 			array( $this->query_page, 'create_query_page_content' )
 		);
 
@@ -87,17 +80,28 @@ class MCE_Admin_Loader {
 			__( 'Ajustes de Conexión', 'mi-conexion-externa' ),
 			__( 'Ajustes', 'mi-conexion-externa' ),
 			'manage_options',
-			'mce-settings', // Slug único para esta página
+			'mce-settings',
 			array( $this->settings_page, 'create_settings_page_content' )
 		);
 
-		// 4. Añadir la nueva página de "Ayuda"
+		// 4. *** ¡NUEVO SUBMENÚ! ***
+		// Añadir la nueva página de "Estilos CSS"
+		add_submenu_page(
+			'mce-main-menu',
+			__( 'Estilos CSS', 'mi-conexion-externa' ),
+			__( 'Estilos CSS', 'mi-conexion-externa' ),
+			'manage_options',
+			'mce-css', // Slug único
+			array( $this->css_page, 'render_page_content' )
+		);
+
+		// 5. Añadir la página de "Ayuda" (movida al final)
 		add_submenu_page(
 			'mce-main-menu',
 			__( 'Ayuda y Guía de Uso', 'mi-conexion-externa' ),
 			__( 'Ayuda', 'mi-conexion-externa' ),
 			'manage_options',
-			'mce-help', // Slug único
+			'mce-help',
 			array( $this->help_page, 'render_page_content' )
 		);
 	}

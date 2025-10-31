@@ -56,7 +56,6 @@ function mce_load_plugin_core() {
 	require_once MCE_PLUGIN_DIR . 'includes/mce-shortcodes.php';
 
 	// --- 2. Cargamos el núcleo del ADMIN ---
-	// (Esta refactorización carga un solo archivo que maneja el resto)
 	if ( is_admin() ) {
 		require_once MCE_PLUGIN_DIR . 'admin/class-mce-admin-loader.php';
 		new MCE_Admin_Loader();
@@ -64,6 +63,10 @@ function mce_load_plugin_core() {
 	
 	// 3. Cargamos la integración de Elementor Pro (condicional)
 	add_action( 'plugins_loaded', 'mce_load_elementor_pro_integration', 11 );
+	
+	// 4. *** ¡NUEVO! ***
+	// Enganchamos la función que imprime el CSS personalizado en el <head>
+	add_action( 'wp_head', 'mce_output_custom_css' );
 }
 add_action( 'plugins_loaded', 'mce_load_plugin_core' );
 
@@ -76,5 +79,26 @@ function mce_load_elementor_pro_integration() {
 	if ( defined( 'ELEMENTOR_PRO_VERSION' ) ) {
 		require_once MCE_PLUGIN_DIR . 'includes/class-mce-elementor-integration.php';
 		new MCE_Elementor_Integration();
+	}
+}
+
+/**
+ * *** ¡NUEVA FUNCIÓN! ***
+ * Imprime el CSS guardado en la BBDD dentro del <head> del sitio.
+ */
+function mce_output_custom_css() {
+	// 1. Obtener el CSS guardado de la base de datos
+	$custom_css = get_option( 'mce_custom_css' );
+
+	// 2. Si no está vacío, sanitizarlo e imprimirlo
+	if ( ! empty( $custom_css ) ) {
+		// wp_strip_all_tags es una sanitización básica pero segura
+		// que elimina <script> y otras etiquetas, pero deja el CSS.
+		$sanitized_css = wp_strip_all_tags( $custom_css );
+		
+		echo '' . "\n";
+		echo '<style type"text/css" id="mce-custom-styles">' . "\n";
+		echo $sanitized_css;
+		echo "\n" . '</style>' . "\n";
 	}
 }
