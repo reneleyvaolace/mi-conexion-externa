@@ -43,26 +43,25 @@ add_action( 'init', 'mce_register_shortcodes' );
 /**
  * 3. LA LÓGICA DE RENDERIZADO DEL SHORTCODE
  *
- * *** ¡REFRACTORIZADO! ***
- * Ahora acepta el atributo 'ocultar_etiquetas'.
+ * *** ¡REFRACTORIZADO PARA PAGINACIÓN! ***
  */
 function mce_render_tabla_shortcode( $atts ) {
 
 	// 1. Validar el atributo OBLIGATORIO 'tabla'.
 	if ( empty( $atts['tabla'] ) ) {
-		return '<p style="color:red;">' . esc_html( __( 'Error del Plugin [MCE]: Falta el atributo "tabla" en el shortcode. Ej: [mce_mostrar_tabla tabla="su_tabla"]', 'mi-conexion-externa' ) ) . '</p>';
+		return '<p style="color:red;">'J . esc_html( __( 'Error del Plugin [MCE]: Falta el atributo "tabla" en el shortcode. Ej: [mce_mostrar_tabla tabla="su_tabla"]', 'mi-conexion-externa' ) ) . '</p>';
 	}
 
 	// 2. Parsear los atributos del shortcode
-	// *** ¡NUEVO! Se añade 'ocultar_etiquetas' ***
+	// *** ¡NUEVO! Se añade 'paginacion' (reemplaza a 'limite') ***
 	$a = shortcode_atts(
 		array(
 			'tabla'             => '',
 			'columnas'          => 3,
-			'limite'            => 10,
+			'paginacion'        => 10, // Nuevo: filas por página (reemplaza a 'limite')
 			'columnas_mostrar'  => '',
 			'llave_titulo'      => '',
-			'ocultar_etiquetas' => '', // Nuevo: string vacío por defecto
+			'ocultar_etiquetas' => '',
 		),
 		$atts
 	);
@@ -70,105 +69,105 @@ function mce_render_tabla_shortcode( $atts ) {
 	// 3. Sanitizar todos los atributos (Regla 1: Seguridad)
 	$tabla                   = sanitize_text_field( $a['tabla'] );
 	$columnas                = intval( $a['columnas'] );
-	$limite                  = intval( $a['limite'] );
+	$filas_por_pagina        = intval( $a['paginacion'] ); // Nuevo
 	$columnas_a_mostrar_str    = sanitize_text_field( $a['columnas_mostrar'] );
 	$llave_titulo            = sanitize_text_field( $a['llave_titulo'] );
-	$etiquetas_a_ocultar_str = sanitize_text_field( $a['ocultar_etiquetas'] ); // Nuevo
+	$etiquetas_a_ocultar_str = sanitize_text_field( $a['ocultar_etiquetas'] );
 
 	// Forzar valores seguros
 	if ( $columnas < 1 || $columnas > 6 ) { $columnas = 3; }
-	if ( $limite <= 0 ) { $limite = 10; }
+	if ( $filas_por_pagina <= 0 ) { $filas_por_pagina = 10; }
 
-	// 4. Convertir los strings de atributos en arrays limpios
+	// *** ¡NUEVA LÓGICA DE PAGINACIÓN! ***
+	// 4. Obtener la página actual de la URL (Regla 1: Seguridad)
+	// Usamos un parámetro de URL único para evitar conflictos (ej. ?pagina_mce=2)
+	$pagina_actual = 1;
+	if ( isset( $_GET['pagina_mce'] ) ) {
+		$pagina_actual = intval( $_GET['pagina_mce'] );
+		if ( $pagina_actual < 1 ) { $pagina_actual = 1; }
+	}
+
+	// 5. Convertir los strings de atributos en arrays limpios
 	$columnas_a_mostrar = array();
 	if ( ! empty( $columnas_a_mostrar_str ) ) {
-		$temp_array = explode( ',', $columnas_a_mostrar_str );
-		$columnas_a_mostrar = array_map( 'trim', $temp_array );
+		$columnas_a_mostrar = array_map( 'trim', explode( ',', $columnas_a_mostrar_str ) );
 	}
-
-	// ¡NUEVO!
 	$etiquetas_a_ocultar = array();
 	if ( ! empty( $etiquetas_a_ocultar_str ) ) {
-		$temp_array = explode( ',', $etiquetas_a_ocultar_str );
-		$etiquetas_a_ocultar = array_map( 'trim', $temp_array );
+		$etiquetas_a_ocultar = array_map( 'trim', explode( ',', $etiquetas_a_ocultar_str ) );
 	}
 
-	// 5. Obtener los datos usando nuestro "cerebro".
+	// 6. Obtener los datos usando nuestro "cerebro" (¡la nueva función!)
 	$db_handler = new MCE_DB_Handler();
-	$data = $db_handler->get_table_content( $tabla, $limite );
+	$resultado = $db_handler->get_paginated_table_data( $tabla, $filas_por_pagina, $pagina_actual );
 
-	// 6. Manejar Errores
-	if ( is_wp_error( $data ) ) {
+	// 7. Manejar Errores
+	if ( is_wp_error( $resultado ) ) {
 		if ( current_user_can( 'manage_options' ) ) {
-			return '<p style="color:red;">' . esc_html( __( 'Error del Plugin [MCE]:', 'mi-conexion-externa' ) . ' ' . $data->get_error_message() ) . '</p>';
+			return '<p style="color:red;">' . esc_html( __( 'Error del Plugin [MCE]:', 'mi-conexion-externa' ) . ' ' . $resultado->get_error_message() ) . '</p>';
 		}
 		return '';
 	}
 
-	// 7. Manejar Tabla Vacía
+	// 8. Separar los datos del resultado
+	$data       = $resultado['data'];
+	$total_filas = $resultado['total_rows'];
+
+	// 9. Manejar Tabla Vacía
 	if ( empty( $data ) ) {
-		return '<p>' . esc_html( sprintf( __( 'No se encontraron datos en la tabla "%s".', 'mi-conexion-externa' ), $tabla ) ) . '</p>';
+		// Si estamos en la página 1 y no hay datos, la tabla está vacía.
+		if ( $pagina_actual === 1 ) {
+			return '<p>' . esc_html( sprintf( __( 'No se encontraron datos en la tabla "%s".', 'mi-conexion-externa' ), $tabla ) ) . '</p>';
+		} else {
+			// Si estamos en una página > 1 y no hay datos, es un error (ej. ?pagina_mce=99)
+			return '<p>' . esc_html( __( 'No se encontraron datos para esta página.', 'mi-conexion-externa' ) ) . '</p>';
+		}
 	}
 
-	// 8. ¡Éxito! Cargar el CSS.
+	// 10. ¡Éxito! Cargar el CSS.
 	wp_enqueue_style( 'mce-public-style' );
 
-	// 9. Crear el estilo en línea para las columnas.
+	// 11. Crear el estilo en línea para las columnas.
 	$inline_style = sprintf(
 		'grid-template-columns: repeat(%d, 1fr);',
 		$columnas
 	);
 
-	// 10. Construir el HTML.
+	// 12. Construir el HTML.
 	ob_start();
 	?>
 
 	<div class="mce-productos-grid" style="<?php echo esc_attr( $inline_style ); ?>">
-
-		<?php foreach ( $data as $row ) : // Iterar sobre cada fila ?>
+		<?php foreach ( $data as $row ) : // Iterar sobre la "porción" de filas ?>
 			
 			<div class="mce-producto-card">
-				
 				<?php
-				// Primero, buscamos y mostramos el TÍTULO.
+				// Lógica del Título
 				if ( ! empty( $llave_titulo ) && isset( $row[ $llave_titulo ] ) ) {
 					echo '<h3 class="mce-card-title">' . esc_html( $row[ $llave_titulo ] ) . '</h3>';
 				}
 
-				// Segundo, mostramos el resto de los datos.
+				// Lógica de Meta-Datos
 				echo '<div class="mce-card-meta">';
-				
-				foreach ( $row as $key => $value ) : // Iterar sobre las columnas (key => value)
-					
-					// Condición 1: Si especificamos una lista, y esta NO está en la lista, saltar.
+				foreach ( $row as $key => $value ) :
 					if ( ! empty( $columnas_a_mostrar ) && ! in_array( $key, $columnas_a_mostrar, true ) ) {
 						continue;
 					}
-
-					// Condición 2: Si esta es la llave del título, ya la mostramos. Saltar.
 					if ( $key === $llave_titulo ) {
 						continue;
 					}
 
-					// *** ¡NUEVA LÓGICA DE ETIQUETA! ***
 					$mostrar_etiqueta = ! in_array( $key, $etiquetas_a_ocultar, true );
 					$clase_css_item = $mostrar_etiqueta ? 'mce-card-item' : 'mce-card-item mce-item-no-label';
 					?>
-
 					<div class="<?php echo esc_attr( $clase_css_item ); ?>">
-						
-						<?php
-						// Condición 3: Mostrar la etiqueta solo si se debe.
-						if ( $mostrar_etiqueta ) :
-							?>
+						<?php if ( $mostrar_etiqueta ) : ?>
 							<strong><?php echo esc_html( $key ); ?>:</strong>
 						<?php endif; ?>
-
 						<span>
 							<?php
-							// Lógica de detección de PDF
+							// Lógica de PDF
 							$clean_value = trim( (string) $value );
-							
 							if ( str_starts_with( $clean_value, 'http' ) && str_ends_with( strtolower( $clean_value ), '.pdf' ) ) {
 								?>
 								<a href="<?php echo esc_url( $clean_value ); ?>" target="_blank" rel="noopener noreferrer" class="mce-pdf-link">
@@ -180,13 +179,34 @@ function mce_render_tabla_shortcode( $atts ) {
 							}
 							?>
 						</span>
-					</div> <?php endforeach; // Fin del bucle de columnas (key => value) ?>
-				
+					</div>
+				<?php endforeach; // Fin del bucle de columnas (key => value) ?>
 				<?php echo '</div>'; // Fin de .mce-card-meta ?>
-
 			</div> <?php endforeach; // Fin del bucle de filas (row) ?>
-
 	</div> <?php
-	// 11. Devolver el HTML capturado.
+	// *** ¡NUEVO! 13. DIBUJAR LOS ENLACES DE PAGINACIÓN ***
+	
+	// Calcular el total de páginas
+	$total_paginas = ceil( $total_filas / $filas_por_pagina );
+
+	// Solo mostrar la paginación si hay más de 1 página
+	if ( $total_paginas > 1 ) {
+		
+		// Usamos la función nativa de WordPress (Regla 1: WordPress Way)
+		echo '<div class="mce-pagination">';
+		echo paginate_links(
+			array(
+				'base'      => get_permalink() . '%_%', // La URL base
+				'format'    => '?pagina_mce=%#%',      // Nuestro parámetro de URL
+				'current'   => $pagina_actual,
+				'total'     => $total_paginas,
+				'prev_text' => __( '&laquo; Anterior', 'mi-conexion-externa' ),
+				'next_text' => __( 'Siguiente &raquo;', 'mi-conexion-externa' ),
+			)
+		);
+		echo '</div>';
+	}
+
+	// 14. Devolver el HTML capturado.
 	return ob_get_clean();
 }
