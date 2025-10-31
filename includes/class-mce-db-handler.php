@@ -102,60 +102,6 @@ class MCE_DB_Handler {
 	}
 
 	/**
-	 * Obtiene todos los productos de la tabla 'mce_productos'.
-	 *
-	 * @return array|WP_Error Un array de productos si tiene éxito,
-	 * o un WP_Error si falla.
-	 */
-	public function get_productos() {
-		// 1. Intentar conectar.
-		if ( ! $this->connect() ) {
-			return new WP_Error(
-				'db_connection_failed',
-				__( 'No se pudo conectar a la base de datos externa.', 'mi-conexion-externa' ),
-				$this->connection_error
-			);
-		}
-
-		// 2. Definir la consulta.
-		$sql = 'SELECT id, nombre, sku, precio, stock FROM mce_productos ORDER BY nombre ASC';
-
-		// 3. Preparar la consulta.
-		$stmt = $this->connection->prepare( $sql );
-		if ( $stmt === false ) {
-			return new WP_Error(
-				'db_prepare_failed',
-				__( 'Error al preparar la consulta SQL.', 'mi-conexion-externa' ),
-				$this->connection->error
-			);
-		}
-
-		// 4. Ejecutar la consulta.
-		$stmt->execute();
-
-		// 5. Obtener los resultados.
-		$result = $stmt->get_result();
-
-		if ( ! $result ) {
-			return new WP_Error(
-				'db_execute_failed',
-				__( 'Error al ejecutar la consulta SQL.', 'mi-conexion-externa' ),
-				$stmt->error
-			);
-		}
-
-		// 6. Convertir resultados a un array asociativo.
-		$productos = $result->fetch_all( MYSQLI_ASSOC );
-
-		// 7. Limpiar.
-		$stmt->close();
-
-		// 8. Devolver los datos.
-		return $productos;
-	}
-
-	/**
-	 * *** MÉTODO NUEVO ***
 	 * Obtiene una lista de todas las tablas en la base de datos conectada.
 	 *
 	 * @return array|WP_Error Un array de nombres de tablas si tiene éxito,
@@ -206,4 +152,67 @@ class MCE_DB_Handler {
 		// 8. Devolver los datos.
 		return $tables;
 	}
+
+	/**
+	 * *** MÉTODO NUEVO ***
+	 * Obtiene las primeras 100 filas del contenido de una tabla específica.
+	 *
+	 * @param string $table_name El nombre de la tabla a consultar.
+	 * @return array|WP_Error Un array de filas si tiene éxito, o un WP_Error.
+	 */
+	public function get_table_content( $table_name ) {
+		// 1. Intentar conectar.
+		if ( ! $this->connect() ) {
+			return new WP_Error(
+				'db_connection_failed',
+				__( 'No se pudo conectar a la base de datos externa.', 'mi-conexion-externa' ),
+				$this->connection_error
+			);
+		}
+
+		// 2. *** DEFENSA DE SEGURIDAD (Regla 1) ***
+		// Blanqueamos el nombre de la tabla contra la lista real de tablas.
+		$available_tables = $this->get_tables();
+		if ( is_wp_error( $available_tables ) || ! in_array( $table_name, $available_tables, true ) ) {
+			return new WP_Error(
+				'invalid_table_name',
+				__( 'El nombre de la tabla proporcionado no es válido o no se pudo verificar.', 'mi-conexion-externa' ),
+				$table_name
+			);
+		}
+
+		// 3. Construir la consulta (¡Ahora es seguro!).
+		// Usamos acentos graves y LIMIT (Regla 1).
+		$sql = "SELECT * FROM \`" . $table_name . "\` LIMIT 100;";
+
+		// 4. Preparar y ejecutar.
+		$stmt = $this->connection->prepare( $sql );
+		if ( $stmt === false ) {
+			return new WP_Error(
+				'db_prepare_failed',
+				__( 'Error al preparar la consulta SQL.', 'mi-conexion-externa' ),
+				$this->connection->error
+			);
+		}
+		$stmt->execute();
+		$result = $stmt->get_result();
+
+		if ( ! $result ) {
+			return new WP_Error(
+				'db_execute_failed',
+				__( 'Error al ejecutar la consulta SQL.', 'mi-conexion-externa' ),
+				$stmt->error
+			);
+		}
+
+		// 5. Convertir resultados a un array asociativo.
+		$data = $result->fetch_all( MYSQLI_ASSOC );
+
+		// 6. Limpiar.
+		$stmt->close();
+
+		// 7. Devolver los datos.
+		return $data;
+	}
+
 }
