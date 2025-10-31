@@ -63,8 +63,7 @@ class MCE_DB_Handler {
 
 	/**
 	 * Establece la conexión con la base de datos.
-	 *
-	 * @return bool True si la conexión es exitosa, False si falla.
+	 * (Sin cambios)
 	 */
 	private function connect() {
 		if ( $this->connection ) {
@@ -98,7 +97,7 @@ class MCE_DB_Handler {
 
 	/**
 	 * Obtiene una lista de todas las tablas en la base de datos conectada.
-	 * (Para el Explorador)
+	 * (Sin cambios)
 	 */
 	public function get_tables() {
 		if ( ! $this->connect() ) {
@@ -139,13 +138,15 @@ class MCE_DB_Handler {
 	}
 
 	/**
-	 * Obtiene las primeras 100 filas del contenido de una tabla específica.
-	 * (Para el Explorador)
+	 * *** MÉTODO ACTUALIZADO ***
+	 * Obtiene el contenido de una tabla específica, con un límite configurable.
 	 *
 	 * @param string $table_name El nombre de la tabla a consultar.
+	 * @param int    $limit      El número de filas a devolver.
 	 * @return array|WP_Error Un array de filas si tiene éxito, o un WP_Error.
 	 */
-	public function get_table_content( $table_name ) {
+	public function get_table_content( $table_name, $limit = 100 ) {
+		// 1. Intentar conectar.
 		if ( ! $this->connect() ) {
 			return new WP_Error(
 				'db_connection_failed',
@@ -154,7 +155,7 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 1. Validar que la tabla existe en la BD.
+		// 2. Defensa de Seguridad: Validar que la tabla existe en la BD.
 		$available_tables = $this->get_tables();
 		if ( is_wp_error( $available_tables ) || ! in_array( $table_name, $available_tables, true ) ) {
 			return new WP_Error(
@@ -164,12 +165,19 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 2. Protección adicional: eliminar caracteres no válidos.
+		// 3. Protección adicional: eliminar caracteres no válidos.
 		$table_name = preg_replace( '/[^A-Za-z0-9_]/', '', $table_name );
 
-		// 3. Construir la consulta SQL de forma segura (sin backslashes).
-		$sql = "SELECT * FROM \`" . $table_name . "\` LIMIT 100;";
+		// 4. *** ¡NUEVO! Sanitizar y validar el límite.
+		$limit = intval( $limit );
+		if ( $limit <= 0 ) {
+			$limit = 100; // Valor por defecto si es inválido (ej. 0 o -5).
+		}
 
+		// 5. Construir la consulta SQL (ahora con un placeholder para LIMIT).
+		$sql = "SELECT * FROM \`" . $table_name . "\` LIMIT ?;";
+
+		// 6. Preparar y "atar" el parámetro (bind param).
 		$stmt = $this->connection->prepare( $sql );
 		if ( $stmt === false ) {
 			$mysql_error = $this->connection->error;
@@ -180,6 +188,10 @@ class MCE_DB_Handler {
 			);
 		}
 
+		// ¡NUEVO! Atar el límite como un entero (Regla 1: Seguridad)
+		$stmt->bind_param( 'i', $limit );
+
+		// 7. Ejecutar la consulta.
 		$stmt->execute();
 		$result = $stmt->get_result();
 
@@ -191,16 +203,19 @@ class MCE_DB_Handler {
 			);
 		}
 
+		// 8. Convertir resultados a un array asociativo.
 		$data = $result->fetch_all( MYSQLI_ASSOC );
+
+		// 9. Limpiar.
 		$stmt->close();
 
+		// 10. Devolver los datos.
 		return $data;
 	}
 
 	/**
-	 * *** FUNCIÓN AÑADIDA DE VUELTA ***
 	 * Obtiene todos los productos de la tabla 'mce_productos'.
-	 * (Para el Shortcode)
+	 * (Sin cambios, lo dejamos por ahora)
 	 *
 	 * @return array|WP_Error Un array de productos si tiene éxito,
 	 * o un WP_Error si falla.
@@ -218,7 +233,7 @@ class MCE_DB_Handler {
 		// 2. Definir la consulta.
 		$sql = 'SELECT id, nombre, sku, precio, stock FROM mce_productos ORDER BY nombre ASC';
 
-		// 3. Preparar la consulta (Regla 1: Prepared Statements).
+		// 3. Preparar la consulta.
 		$stmt = $this->connection->prepare( $sql );
 		if ( $stmt === false ) {
 			return new WP_Error(
