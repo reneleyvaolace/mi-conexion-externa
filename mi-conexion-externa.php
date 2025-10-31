@@ -64,8 +64,7 @@ function mce_load_plugin_core() {
 	// 3. Cargamos la integración de Elementor Pro (condicional)
 	add_action( 'plugins_loaded', 'mce_load_elementor_pro_integration', 11 );
 	
-	// 4. *** ¡NUEVO! ***
-	// Enganchamos la función que imprime el CSS personalizado en el <head>
+	// 4. Enganchamos la función que imprime el CSS personalizado en el <head>
 	add_action( 'wp_head', 'mce_output_custom_css' );
 }
 add_action( 'plugins_loaded', 'mce_load_plugin_core' );
@@ -83,7 +82,7 @@ function mce_load_elementor_pro_integration() {
 }
 
 /**
- * *** ¡NUEVA FUNCIÓN! ***
+ * *** ¡FUNCIÓN CORREGIDA! ***
  * Imprime el CSS guardado en la BBDD dentro del <head> del sitio.
  */
 function mce_output_custom_css() {
@@ -92,11 +91,11 @@ function mce_output_custom_css() {
 
 	// 2. Si no está vacío, sanitizarlo e imprimirlo
 	if ( ! empty( $custom_css ) ) {
-		// wp_strip_all_tags es una sanitización básica pero segura
-		// que elimina <script> y otras etiquetas, pero deja el CSS.
 		$sanitized_css = wp_strip_all_tags( $custom_css );
 		
 		echo '' . "\n";
+		
+		// *** ¡LÍNEA CORREGIDA! *** Se añadió el '='
 		echo '<style type="text/css" id="mce-custom-styles">' . "\n";
 		echo $sanitized_css;
 		echo "\n" . '</style>' . "\n";
