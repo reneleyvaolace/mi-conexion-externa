@@ -18,30 +18,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class MCE_DB_Handler {
 
-	/**
-	 * Almacena la instancia de la conexión mysqli.
-	 *
-	 * @var mysqli|null
-	 */
 	private $connection = null;
-
-	/**
-	 * Almacena el último error de conexión.
-	 *
-	 * @var string|null
-	 */
 	private $connection_error = null;
 
-	// --- Propiedades de las credenciales ---
 	private $host;
 	private $port;
 	private $db_name;
 	private $user;
 	private $pass;
 
-	/**
-	 * Constructor. Carga las credenciales guardadas.
-	 */
 	public function __construct() {
 		$opts = get_option( 'mce_db_settings' );
 
@@ -52,19 +37,12 @@ class MCE_DB_Handler {
 		$this->pass    = isset( $opts['mce_db_pass'] ) ? $opts['mce_db_pass'] : '';
 	}
 
-	/**
-	 * Destructor. Cierra la conexión automáticamente al final.
-	 */
 	public function __destruct() {
 		if ( $this->connection ) {
 			$this->connection->close();
 		}
 	}
 
-	/**
-	 * Establece la conexión con la base de datos.
-	 * (Sin cambios)
-	 */
 	private function connect() {
 		if ( $this->connection ) {
 			return true;
@@ -76,7 +54,6 @@ class MCE_DB_Handler {
 		}
 
 		mysqli_report( MYSQLI_REPORT_OFF );
-
 		$this->connection = @new mysqli( $this->host, $this->user, $this->pass, $this->db_name, (int) $this->port );
 
 		if ( $this->connection->connect_error ) {
@@ -95,10 +72,6 @@ class MCE_DB_Handler {
 		return true;
 	}
 
-	/**
-	 * Obtiene una lista de todas las tablas en la base de datos conectada.
-	 * (Sin cambios)
-	 */
 	public function get_tables() {
 		if ( ! $this->connect() ) {
 			return new WP_Error(
@@ -138,15 +111,13 @@ class MCE_DB_Handler {
 	}
 
 	/**
-	 * *** MÉTODO ACTUALIZADO ***
-	 * Obtiene el contenido de una tabla específica, con un límite configurable.
+	 * Obtiene el contenido de una tabla específica.
 	 *
-	 * @param string $table_name El nombre de la tabla a consultar.
-	 * @param int    $limit      El número de filas a devolver.
-	 * @return array|WP_Error Un array de filas si tiene éxito, o un WP_Error.
+	 * @param string $table_name El nombre de la tabla.
+	 * @param int    $limit      Número de filas (por defecto 100).
+	 * @return array|WP_Error
 	 */
 	public function get_table_content( $table_name, $limit = 100 ) {
-		// 1. Intentar conectar.
 		if ( ! $this->connect() ) {
 			return new WP_Error(
 				'db_connection_failed',
@@ -155,7 +126,7 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 2. Defensa de Seguridad: Validar que la tabla existe en la BD.
+		// Validar tabla.
 		$available_tables = $this->get_tables();
 		if ( is_wp_error( $available_tables ) || ! in_array( $table_name, $available_tables, true ) ) {
 			return new WP_Error(
@@ -165,19 +136,13 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 3. Protección adicional: eliminar caracteres no válidos.
+		// Sanear nombre de tabla y límite.
 		$table_name = preg_replace( '/[^A-Za-z0-9_]/', '', $table_name );
+		$limit      = intval( $limit ) > 0 ? intval( $limit ) : 100;
 
-		// 4. *** ¡NUEVO! Sanitizar y validar el límite.
-		$limit = intval( $limit );
-		if ( $limit <= 0 ) {
-			$limit = 100; // Valor por defecto si es inválido (ej. 0 o -5).
-		}
+		// ✅ Corrección: eliminar barras invertidas y no usar parámetros en LIMIT.
+		$sql = "SELECT * FROM `" . $table_name . "` LIMIT " . $limit . ";";
 
-		// 5. Construir la consulta SQL (ahora con un placeholder para LIMIT).
-		$sql = "SELECT * FROM \`" . $table_name . "\` LIMIT ?;";
-
-		// 6. Preparar y "atar" el parámetro (bind param).
 		$stmt = $this->connection->prepare( $sql );
 		if ( $stmt === false ) {
 			$mysql_error = $this->connection->error;
@@ -188,10 +153,6 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// ¡NUEVO! Atar el límite como un entero (Regla 1: Seguridad)
-		$stmt->bind_param( 'i', $limit );
-
-		// 7. Ejecutar la consulta.
 		$stmt->execute();
 		$result = $stmt->get_result();
 
@@ -203,25 +164,13 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 8. Convertir resultados a un array asociativo.
 		$data = $result->fetch_all( MYSQLI_ASSOC );
-
-		// 9. Limpiar.
 		$stmt->close();
 
-		// 10. Devolver los datos.
 		return $data;
 	}
 
-	/**
-	 * Obtiene todos los productos de la tabla 'mce_productos'.
-	 * (Sin cambios, lo dejamos por ahora)
-	 *
-	 * @return array|WP_Error Un array de productos si tiene éxito,
-	 * o un WP_Error si falla.
-	 */
 	public function get_productos() {
-		// 1. Intentar conectar.
 		if ( ! $this->connect() ) {
 			return new WP_Error(
 				'db_connection_failed',
@@ -230,10 +179,7 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 2. Definir la consulta.
 		$sql = 'SELECT id, nombre, sku, precio, stock FROM mce_productos ORDER BY nombre ASC';
-
-		// 3. Preparar la consulta.
 		$stmt = $this->connection->prepare( $sql );
 		if ( $stmt === false ) {
 			return new WP_Error(
@@ -243,10 +189,7 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 4. Ejecutar la consulta.
 		$stmt->execute();
-
-		// 5. Obtener los resultados.
 		$result = $stmt->get_result();
 
 		if ( ! $result ) {
@@ -257,13 +200,9 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 6. Convertir resultados a un array asociativo.
 		$productos = $result->fetch_all( MYSQLI_ASSOC );
-
-		// 7. Limpiar.
 		$stmt->close();
 
-		// 8. Devolver los datos.
 		return $productos;
 	}
 }
