@@ -48,7 +48,6 @@ function mce_render_productos_shortcode( $atts ) {
 
 	// *** ¡NUEVO! ***
 	// 1. Parsear los atributos del shortcode (Regla 1: WordPress Way)
-	// Establecemos un valor por defecto de 3 columnas si no se especifica.
 	$a = shortcode_atts(
 		array(
 			'columnas' => 3,
@@ -57,7 +56,6 @@ function mce_render_productos_shortcode( $atts ) {
 	);
 
 	// 2. Sanitizar el atributo (Regla 1: Seguridad)
-	// Nos aseguramos de que sea un número entero.
 	$columnas = intval( $a['columnas'] );
 	if ( $columnas < 1 || $columnas > 6 ) {
 		$columnas = 3; // Forzamos un valor seguro entre 1 y 6.
@@ -77,10 +75,11 @@ function mce_render_productos_shortcode( $atts ) {
 
 	// 5. Manejar Tabla Vacía
 	if ( empty( $productos ) ) {
-		return '<p>' . esc_html( __( 'No hay productos para mostrar en este momento.', 'mi-conexion-externa' ) . '</p>';
+		return '<p>' . esc_html__( 'No hay productos para mostrar en este momento.', 'mi-conexion-externa' ) . '</p>';
 	}
 
 	// 6. ¡Éxito! Cargar el CSS.
+	// *** ¡CORREGIDO! *** Se añadió el punto y coma (;) al final.
 	wp_enqueue_style( 'mce-public-style' );
 
 	// 7. *** ¡NUEVO! ***
