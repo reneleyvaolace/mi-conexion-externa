@@ -39,7 +39,8 @@
 						noticeBox
 							.removeClass('notice-info notice-error')
 							.addClass('notice-success')
-							.html('<p>'S + response.data.message + '</p>');
+							// *** LÍNEA CORREGIDA ***
+							.html('<p>' + response.data.message + '</p>');
 					} else {
 						// 5b. Error controlado (PHP devolvió wp_send_json_error).
 						noticeBox
