@@ -51,16 +51,15 @@ function mce_load_plugin_core() {
 		dirname( plugin_basename( MCE_PLUGIN_FILE ) ) . '/languages/'
 	);
 
-	// --- 1. Cargamos los archivos de clases ---
+	// --- 1. Cargamos los archivos de clases GLOBALES ---
+	// El "cerebro" (Manejador de BBDD)
 	require_once MCE_PLUGIN_DIR . 'includes/class-mce-db-handler.php';
 	
-	// *** LÍNEA ACTUALIZADA ***
-	// 2. Cargamos el archivo de shortcodes (Global).
+	// El Shortcode (Plan A)
 	require_once MCE_PLUGIN_DIR . 'includes/mce-shortcodes.php';
 
-	// --- 2. Instanciamos las clases solo si estamos en el Admin ---
+	// --- 2. Cargamos los archivos de ADMIN ---
 	if ( is_admin() ) {
-		// Cargamos los archivos solo de admin
 		require_once MCE_PLUGIN_DIR . 'admin/class-mce-settings-page.php';
 		require_once MCE_PLUGIN_DIR . 'admin/class-mce-query-page.php';
 		
@@ -69,10 +68,26 @@ function mce_load_plugin_core() {
 		$mce_query_page = new MCE_Query_Page( $mce_settings );
 	}
 	
-	// (Aquí irá la lógica para cargar la integración de Elementor Pro)
-	// if ( defined( 'ELEMENTOR_PRO_VERSION' ) ) {
-	// 	require_once MCE_PLUGIN_DIR . 'includes/class-mce-elementor-integration.php';
-	// }
+	// *** ¡NUEVA LÓGICA! ***
+	// 3. Cargamos el "Plan B" (Integración Pro) solo si Elementor Pro está activo.
+	// Usamos el hook 'plugins_loaded' con prioridad 11 para asegurarnos
+	// de que Elementor Pro ya se haya cargado (que se carga en prioridad 10).
+	add_action( 'plugins_loaded', 'mce_load_elementor_pro_integration', 11 );
 }
 // Usamos 'plugins_loaded' para cargar nuestros archivos principales.
 add_action( 'plugins_loaded', 'mce_load_plugin_core' );
+
+
+/**
+ * Función de carga condicional para la integración de Elementor Pro.
+ */
+function mce_load_elementor_pro_integration() {
+	// (Regla 1: Mejor Práctica de Carga Condicional)
+	// Esta constante 'ELEMENTOR_PRO_VERSION' solo existe si Elementor Pro
+	// está instalado y activo.
+	if ( defined( 'ELEMENTOR_PRO_VERSION' ) ) {
+		require_once MCE_PLUGIN_DIR . 'includes/class-mce-elementor-integration.php';
+		// Instanciamos la clase de integración para que se enganche.
+		new MCE_Elementor_Integration();
+	}
+}
