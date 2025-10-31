@@ -64,8 +64,10 @@ function mce_load_plugin_core() {
 	// 3. Cargamos la integración de Elementor Pro (condicional)
 	add_action( 'plugins_loaded', 'mce_load_elementor_pro_integration', 11 );
 	
-	// 4. Enganchamos la función que imprime el CSS personalizado en el <head>
-	add_action( 'wp_head', 'mce_output_custom_css' );
+	// 4. *** ¡LÍNEA CORREGIDA! ***
+	// Enganchamos la función que imprime el CSS personalizado en el <head>
+	// con una prioridad tardía (99) para que sobreescriba a los demás.
+	add_action( 'wp_head', 'mce_output_custom_css', 99 );
 }
 add_action( 'plugins_loaded', 'mce_load_plugin_core' );
 
@@ -82,8 +84,8 @@ function mce_load_elementor_pro_integration() {
 }
 
 /**
- * *** ¡FUNCIÓN CORREGIDA! ***
  * Imprime el CSS guardado en la BBDD dentro del <head> del sitio.
+ * (Función sin cambios, el error estaba en el add_action de arriba)
  */
 function mce_output_custom_css() {
 	// 1. Obtener el CSS guardado de la base de datos
@@ -94,8 +96,6 @@ function mce_output_custom_css() {
 		$sanitized_css = wp_strip_all_tags( $custom_css );
 		
 		echo '' . "\n";
-		
-		// *** ¡LÍNEA CORREGIDA! *** Se añadió el '='
 		echo '<style type="text/css" id="mce-custom-styles">' . "\n";
 		echo $sanitized_css;
 		echo "\n" . '</style>' . "\n";
