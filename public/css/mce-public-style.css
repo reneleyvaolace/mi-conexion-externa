@@ -1,8 +1,8 @@
 /**
- * Estilos públicos para el shortcode de Mi Conexión Externa.
+ * Estilos públicos "Adaptables al Tema" para Mi Conexión Externa.
  *
- * *** ¡ACTUALIZADO! ***
- * Añade estilos para el título y los meta-datos.
+ * Usamos variables de CSS de WordPress (ej. --wp--preset--...)
+ * para que coincida con el tema activo.
  */
 
 /* 1. El contenedor de la cuadrícula (Sin cambios) */
@@ -11,12 +11,16 @@
 	gap: 25px;
 	width: 100%;
 	margin-top: 20px;
+	/* Hereda la fuente del tema */
+	font-family: var(--wp--preset--font-family--body, sans-serif);
 }
 
-/* 2. La tarjeta individual (Sin cambios) */
+/* 2. La tarjeta individual */
 .mce-producto-card {
-	background: #ffffff;
-	border: 1px solid #e0e0e0;
+	/* Usar el color de fondo del tema (ej. blanco) */
+	background: var(--wp--preset--color--base, #ffffff);
+	/* Usar el color de borde del tema (sutil) */
+	border: 1px solid var(--wp--preset--color--contrast-2, #e0e0e0);
 	border-radius: 8px;
 	padding: 20px;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -30,66 +34,74 @@
 	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
-/* 3. ¡NUEVO! Estilo para el Título (llave_titulo) */
+/* 3. Título de la Tarjeta (llave_titulo) */
 .mce-producto-card .mce-card-title {
-	font-size: 1.25rem;
-	font-weight: 600;
+	/* Usar la fuente de los Títulos del Tema */
+	font-family: var(--wp--preset--font-family--heading, sans-serif);
+	font-size: var(--wp--preset--font-size--large, 1.25rem);
+	/* Usar el color de los Títulos del Tema */
+	color: var(--wp--preset--color--foreground, #111);
+	font-weight: 700;
 	margin-top: 0;
 	margin-bottom: 15px;
-	color: #111;
-	/* El título se alinea solo */
 }
 
-/* 4. ¡NUEVO! Contenedor para el resto de los datos */
+/* 4. Contenedor de Meta-Datos */
 .mce-producto-card .mce-card-meta {
-	font-size: 0.9rem;
-	color: #333;
-	margin-top: auto; /* Empuja esto al fondo si la tarjeta crece */
+	/* Usar el color de texto secundario del Tema */
+	color: var(--wp--preset--color--contrast-3, #333);
+	font-size: var(--wp--preset--font-size--small, 0.9rem);
+	margin-top: auto;
 }
 
-/* 5. ¡NUEVO! Estilo para cada par Clave/Valor */
+/* 5. Cada Fila de Dato (ej. Sku: 123) */
 .mce-card-item {
 	display: flex;
-	justify-content: space-between; /* Clave a la izq, Valor a la der */
+	justify-content: space-between;
 	padding: 8px 0;
-	border-bottom: 1px solid #f0f0f0;
+	border-bottom: 1px solid var(--wp--preset--color--contrast-2, #f0f0f0);
 }
 .mce-card-item:last-child {
 	border-bottom: none;
 }
 
+/* 6. Etiqueta de la Fila (ej. "Sku:") */
 .mce-card-item strong {
-	color: #555;
+	/* Usar el color de texto principal pero más sutil */
+	color: var(--wp--preset--color--foreground, #111);
+	font-weight: 600;
 	margin-right: 10px;
-	text-transform: capitalize; /* Pone la 'llave' en mayúscula: Sku: */
+	text-transform: capitalize;
 }
 
+/* 7. Valor de la Fila (ej. "123") */
 .mce-card-item span {
 	text-align: right;
 	font-weight: 500;
+	color: var(--wp--preset--color--contrast-3, #333);
 }
 
-/* 6. ¡NUEVO! Estilo para un valor SIN etiqueta (ocultar_etiquetas) */
+/* 8. Fila SIN Etiqueta (de "ocultar_etiquetas") */
 .mce-card-item.mce-item-no-label {
-	justify-content: flex-start; /* Quita el space-between */
-	font-size: 1rem;
+	justify-content: flex-start;
+	font-size: var(--wp--preset--font-size--medium, 1rem);
 	font-weight: 500;
-	padding-top: 4px;
-	padding-bottom: 4px;
+	color: var(--wp--preset--color--foreground, #111);
 }
 
-/* 7. ¡NUEVO! Estilo para el enlace PDF */
+/* 9. Enlace PDF */
 .mce-pdf-link {
 	display: inline-block;
-	background: #f4f4f4;
+	background: var(--wp--preset--color--contrast, #f4f4f4);
 	padding: 3px 8px;
 	border-radius: 4px;
 	text-decoration: none;
 	font-weight: 500;
-	color: #0051d2;
+	/* Usar el color "primario" o "de enlace" del Tema */
+	color: var(--wp--preset--color--primary, #0051d2);
 	transition: background 0.2s ease;
 }
 .mce-pdf-link:hover {
-	background: #e0e0e0;
-	color: #000;
+	background: var(--wp--preset--color--contrast-2, #e0e0e0);
+	color: var(--wp--preset--color--foreground, #000);
 }
