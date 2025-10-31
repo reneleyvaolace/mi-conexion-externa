@@ -5,7 +5,7 @@
  * @package MiConexionExterna
  */
 
-// Regla 1: Mejor Práctica de Seguridad. Evitar acceso directo.
+// Seguridad básica: evitar acceso directo.
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -67,30 +67,25 @@ class MCE_DB_Handler {
 	 * @return bool True si la conexión es exitosa, False si falla.
 	 */
 	private function connect() {
-		// 1. Si ya estamos conectados, no hacer nada.
 		if ( $this->connection ) {
 			return true;
 		}
 
-		// 2. Validar que tengamos credenciales.
 		if ( empty( $this->host ) || empty( $this->port ) || empty( $this->db_name ) || empty( $this->user ) ) {
 			$this->connection_error = __( 'Las credenciales de la base de datos no están configuradas.', 'mi-conexion-externa' );
 			return false;
 		}
 
-		// 3. Suprimir errores nativos para manejarlos nosotros.
 		mysqli_report( MYSQLI_REPORT_OFF );
 
 		$this->connection = @new mysqli( $this->host, $this->user, $this->pass, $this->db_name, (int) $this->port );
 
-		// 4. Manejar error de conexión.
 		if ( $this->connection->connect_error ) {
 			$this->connection_error = $this->connection->connect_error;
 			$this->connection = null;
 			return false;
 		}
 
-		// 5. Establecer charset.
 		if ( ! $this->connection->set_charset( 'utf8mb4' ) ) {
 			$this->connection_error = __( 'Error al establecer el charset utf8mb4.', 'mi-conexion-externa' );
 			$this->connection->close();
@@ -103,10 +98,8 @@ class MCE_DB_Handler {
 
 	/**
 	 * Obtiene una lista de todas las tablas en la base de datos conectada.
-	 * (Sin cambios)
 	 */
 	public function get_tables() {
-		// 1. Intentar conectar.
 		if ( ! $this->connect() ) {
 			return new WP_Error(
 				'db_connection_failed',
@@ -115,10 +108,7 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 2. Definir la consulta.
 		$sql = 'SHOW TABLES;';
-
-		// 3. Preparar y ejecutar.
 		$stmt = $this->connection->prepare( $sql );
 		if ( $stmt === false ) {
 			return new WP_Error(
@@ -138,28 +128,22 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 6. Convertir resultados a un array simple.
 		$tables = array();
 		while ( $row = $result->fetch_array( MYSQLI_NUM ) ) {
 			$tables[] = $row[0];
 		}
 
-		// 7. Limpiar.
 		$stmt->close();
-
-		// 8. Devolver los datos.
 		return $tables;
 	}
 
 	/**
-	 * *** MÉTODO CORREGIDO (FINAL) ***
 	 * Obtiene las primeras 100 filas del contenido de una tabla específica.
 	 *
 	 * @param string $table_name El nombre de la tabla a consultar.
 	 * @return array|WP_Error Un array de filas si tiene éxito, o un WP_Error.
 	 */
 	public function get_table_content( $table_name ) {
-		// 1. Intentar conectar.
 		if ( ! $this->connect() ) {
 			return new WP_Error(
 				'db_connection_failed',
@@ -168,7 +152,7 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 2. *** DEFENSA DE SEGURIDAD (Regla 1) ***
+		// 1️⃣ Validar que la tabla existe en la BD.
 		$available_tables = $this->get_tables();
 		if ( is_wp_error( $available_tables ) || ! in_array( $table_name, $available_tables, true ) ) {
 			return new WP_Error(
@@ -178,14 +162,19 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 3. *** LÍNEA CORREGIDA ***
-		// Se eliminaron las barras invertidas '\' que causaban el error de sintaxis.
-		$sql = "SELECT * FROM \`" . $table_name . "\` LIMIT 100;";
+		// 2️⃣ Protección adicional: eliminar caracteres no válidos.
+		$table_name = preg_replace( '/[^A-Za-z0-9_]/', '', $table_name );
 
-		// 4. Preparar y ejecutar.
+		// 3️⃣ Construir la consulta SQL de forma segura (sin backslashes).
+		$sql = "SELECT * FROM `" . $table_name . "` LIMIT 100;";
+
+		// (Opcional) — registrar el SQL ejecutado en debug.log
+		// if ( defined('WP_DEBUG') && WP_DEBUG ) {
+		// 	error_log( '[MCE_DB_Handler] SQL Ejecutado: ' . $sql );
+		// }
+
 		$stmt = $this->connection->prepare( $sql );
 		if ( $stmt === false ) {
-			// Añadimos el error de MySQL para más depuración.
 			$mysql_error = $this->connection->error;
 			return new WP_Error(
 				'db_prepare_failed',
@@ -193,6 +182,7 @@ class MCE_DB_Handler {
 				$mysql_error
 			);
 		}
+
 		$stmt->execute();
 		$result = $stmt->get_result();
 
@@ -204,14 +194,9 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 5. Convertir resultados a un array asociativo.
 		$data = $result->fetch_all( MYSQLI_ASSOC );
-
-		// 6. Limpiar.
 		$stmt->close();
 
-		// 7. Devolver los datos.
 		return $data;
 	}
-
 }
