@@ -30,13 +30,11 @@ add_action( 'wp_enqueue_scripts', 'mce_register_public_styles' );
  * (Sin cambios)
  */
 function mce_register_shortcodes() {
-	// Eliminamos el shortcode antiguo (si existiera en caché)
 	remove_shortcode( 'mostrar_mce_productos' );
 	
-	// Añadimos el nuevo shortcode genérico
 	add_shortcode(
-		'mce_mostrar_tabla', // El shortcode: [mce_mostrar_tabla tabla="..." columnas="..." limite="..." columnas_mostrar="..."]
-		'mce_render_tabla_shortcode' // La función que se ejecutará
+		'mce_mostrar_tabla',
+		'mce_render_tabla_shortcode'
 	);
 }
 add_action( 'init', 'mce_register_shortcodes' );
@@ -46,7 +44,7 @@ add_action( 'init', 'mce_register_shortcodes' );
  * 3. LA LÓGICA DE RENDERIZADO DEL SHORTCODE
  *
  * *** ¡REFRACTORIZADO! ***
- * Esta función ahora es genérica y detecta PDFs.
+ * Ahora acepta el atributo 'llave_titulo'.
  */
 function mce_render_tabla_shortcode( $atts ) {
 
@@ -56,34 +54,33 @@ function mce_render_tabla_shortcode( $atts ) {
 	}
 
 	// 2. Parsear los atributos del shortcode
-	// *** ¡NUEVO! Se añade 'columnas_mostrar' ***
+	// *** ¡NUEVO! Se añade 'llave_titulo' ***
 	$a = shortcode_atts(
 		array(
 			'tabla'            => '',
 			'columnas'         => 3,
 			'limite'           => 10,
-			'columnas_mostrar' => '', // Nuevo: string vacío por defecto
+			'columnas_mostrar' => '',
+			'llave_titulo'     => '', // Nuevo: string vacío por defecto
 		),
 		$atts
 	);
 
 	// 3. Sanitizar todos los atributos (Regla 1: Seguridad)
-	$tabla              = sanitize_text_field( $a['tabla'] );
-	$columnas           = intval( $a['columnas'] );
-	$limite             = intval( $a['limite'] );
+	$tabla                = sanitize_text_field( $a['tabla'] );
+	$columnas             = intval( $a['columnas'] );
+	$limite               = intval( $a['limite'] );
 	$columnas_a_mostrar_str = sanitize_text_field( $a['columnas_mostrar'] );
+	$llave_titulo         = sanitize_text_field( $a['llave_titulo'] ); // Nuevo
 
 	// Forzar valores seguros
 	if ( $columnas < 1 || $columnas > 6 ) { $columnas = 3; }
 	if ( $limite <= 0 ) { $limite = 10; }
 
-	// *** ¡NUEVO! ***
 	// 4. Convertir el string 'columnas_mostrar' en un array limpio
 	$columnas_a_mostrar = array();
 	if ( ! empty( $columnas_a_mostrar_str ) ) {
-		// 1. Divide el string por comas -> [" nombre", "precio ", " sku"]
 		$temp_array = explode( ',', $columnas_a_mostrar_str );
-		// 2. Limpia los espacios en blanco de cada elemento -> ["nombre", "precio", "sku"]
 		$columnas_a_mostrar = array_map( 'trim', $temp_array );
 	}
 
@@ -91,7 +88,7 @@ function mce_render_tabla_shortcode( $atts ) {
 	$db_handler = new MCE_DB_Handler();
 	$data = $db_handler->get_table_content( $tabla, $limite );
 
-	// 6. Manejar Errores (Conexión, tabla inválida, etc.)
+	// 6. Manejar Errores
 	if ( is_wp_error( $data ) ) {
 		if ( current_user_can( 'manage_options' ) ) {
 			return '<p style="color:red;">' . esc_html( __( 'Error del Plugin [MCE]:', 'mi-conexion-externa' ) . ' ' . $data->get_error_message() ) . '</p>';
@@ -123,14 +120,27 @@ function mce_render_tabla_shortcode( $atts ) {
 			
 			<div class="mce-producto-card">
 				
-				<?php foreach ( $row as $key => $value ) : // Iterar sobre las columnas (key => value) ?>
+				<?php
+				// *** ¡NUEVA LÓGICA DE TÍTULO! ***
+				// Primero, buscamos y mostramos el TÍTULO.
+				if ( ! empty( $llave_titulo ) && isset( $row[ $llave_titulo ] ) ) {
+					echo '<h3 class="mce-card-title">' . esc_html( $row[ $llave_titulo ] ) . '</h3>';
+				}
+
+				// *** ¡NUEVA LÓGICA DE DATOS! ***
+				// Segundo, mostramos el resto de los datos.
+				echo '<div class="mce-card-meta">'; // Envolvemos los datos en un 'meta'
+				
+				foreach ( $row as $key => $value ) : // Iterar sobre las columnas (key => value)
 					
-					<?php
-					// *** ¡NUEVA LÓGICA DE FILTRADO! ***
-					// Si el usuario especificó una lista, y esta columna NO está
-					// en la lista, nos la saltamos y no la mostramos.
+					// Condición 1: Si especificamos una lista, y esta NO está en la lista, saltar.
 					if ( ! empty( $columnas_a_mostrar ) && ! in_array( $key, $columnas_a_mostrar, true ) ) {
-						continue; // Saltar a la siguiente columna
+						continue;
+					}
+
+					// Condición 2: Si esta es la llave del título, ya la mostramos. Saltar.
+					if ( $key === $llave_titulo ) {
+						continue;
 					}
 					?>
 
@@ -138,12 +148,12 @@ function mce_render_tabla_shortcode( $atts ) {
 						<strong><?php echo esc_html( $key ); ?>:</strong>
 						<span>
 							<?php
-							// Lógica de detección de PDF (sin cambios)
+							// Lógica de detección de PDF
 							$clean_value = trim( (string) $value );
 							
 							if ( str_starts_with( $clean_value, 'http' ) && str_ends_with( strtolower( $clean_value ), '.pdf' ) ) {
 								?>
-								<a href="<?php echo esc_url( $clean_value ); ?>" target="_blank" rel="noopener noreferrer">
+								<a href="<?php echo esc_url( $clean_value ); ?>" target="_blank" rel="noopener noreferrer" class="mce-pdf-link">
 									<?php echo esc_html( __( 'Ver PDF', 'mi-conexion-externa' ) ); ?>
 								</a>
 								<?php
@@ -153,6 +163,8 @@ function mce_render_tabla_shortcode( $atts ) {
 							?>
 						</span>
 					</div> <?php endforeach; // Fin del bucle de columnas (key => value) ?>
+				
+				<?php echo '</div>'; // Fin de .mce-card-meta ?>
 
 			</div> <?php endforeach; // Fin del bucle de filas (row) ?>
 
