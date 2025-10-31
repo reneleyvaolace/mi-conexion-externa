@@ -111,11 +111,8 @@ class MCE_DB_Handler {
 	}
 
 	/**
-	 * Obtiene el contenido de una tabla específica.
-	 *
-	 * @param string $table_name El nombre de la tabla.
-	 * @param int    $limit      Número de filas (por defecto 100).
-	 * @return array|WP_Error
+	 * Obtiene el contenido de una tabla específica (para el Explorador).
+	 * (Código corregido por el usuario)
 	 */
 	public function get_table_content( $table_name, $limit = 100 ) {
 		if ( ! $this->connect() ) {
@@ -140,8 +137,7 @@ class MCE_DB_Handler {
 		$table_name = preg_replace( '/[^A-Za-z0-9_]/', '', $table_name );
 		$limit      = intval( $limit ) > 0 ? intval( $limit ) : 100;
 
-		// ✅ Corrección: eliminar barras invertidas y no usar parámetros en LIMIT.
-		$sql = "SELECT * FROM `" . $table_name . "` LIMIT " . $limit . ";";
+		$sql = "SELECT * FROM \`" . $table_name . "\` LIMIT " . $limit . ";";
 
 		$stmt = $this->connection->prepare( $sql );
 		if ( $stmt === false ) {
@@ -170,7 +166,26 @@ class MCE_DB_Handler {
 		return $data;
 	}
 
+	/**
+	 * (Función obsoleta, pero la dejamos por si acaso)
+	 */
 	public function get_productos() {
+		return $this->get_table_content( 'mce_productos', 100 );
+	}
+
+
+	/**
+	 * *** ¡NUEVA FUNCIÓN DE PAGINACIÓN! ***
+	 *
+	 * Obtiene datos y el conteo total para una tabla.
+	 *
+	 * @param string $table_name     El nombre de la tabla.
+	 * @param int    $rows_per_page  El 'LIMIT'.
+	 * @param int    $current_page   La página actual (ej. 1, 2, 3).
+	 * @return array|WP_Error
+	 */
+	public function get_paginated_table_data( $table_name, $rows_per_page, $current_page ) {
+		// 1. Conectar
 		if ( ! $this->connect() ) {
 			return new WP_Error(
 				'db_connection_failed',
@@ -179,30 +194,76 @@ class MCE_DB_Handler {
 			);
 		}
 
-		$sql = 'SELECT id, nombre, sku, precio, stock FROM mce_productos ORDER BY nombre ASC';
-		$stmt = $this->connection->prepare( $sql );
-		if ( $stmt === false ) {
+		// 2. Validar y Sanitizar Tabla (Seguridad Regla 1)
+		$available_tables = $this->get_tables();
+		if ( is_wp_error( $available_tables ) || ! in_array( $table_name, $available_tables, true ) ) {
 			return new WP_Error(
-				'db_prepare_failed',
-				__( 'Error al preparar la consulta SQL.', 'mi-conexion-externa' ),
+				'invalid_table_name',
+				__( 'El nombre de la tabla proporcionado no es válido.', 'mi-conexion-externa' ),
+				$table_name
+			);
+		}
+		$table_name = preg_replace( '/[^A-Za-z0-9_]/', '', $table_name );
+
+		// 3. Sanitizar Paginación (Seguridad Regla 1)
+		$rows_per_page = intval( $rows_per_page ) > 0 ? intval( $rows_per_page ) : 10;
+		$current_page  = intval( $current_page ) > 0 ? intval( $current_page ) : 1;
+		$offset        = ( $current_page - 1 ) * $rows_per_page;
+
+		// 4. Consulta 1: Contar el TOTAL de filas
+		$total_rows = 0;
+		$sql_count = "SELECT COUNT(*) FROM \`" . $table_name . "\`;";
+		$result_count = $this->connection->query( $sql_count );
+
+		if ( $result_count ) {
+			$total_rows = (int) $result_count->fetch_row()[0];
+			$result_count->free();
+		} else {
+			return new WP_Error(
+				'db_count_failed',
+				__( 'Error al contar las filas de la tabla.', 'mi-conexion-externa' ),
 				$this->connection->error
 			);
 		}
 
-		$stmt->execute();
-		$result = $stmt->get_result();
+		// Si no hay filas, no necesitamos la segunda consulta.
+		if ( $total_rows === 0 ) {
+			return array(
+				'data'       => array(),
+				'total_rows' => 0,
+			);
+		}
 
-		if ( ! $result ) {
+		// 5. Consulta 2: Obtener los DATOS de la página actual
+		$sql_data = "SELECT * FROM \`" . $table_name . "\` LIMIT " . $rows_per_page . " OFFSET " . $offset . ";";
+		
+		$stmt = $this->connection->prepare( $sql_data );
+		if ( $stmt === false ) {
+			return new WP_Error(
+				'db_prepare_failed',
+				__( 'Error al preparar la consulta de paginación.', 'mi-conexion-externa' ),
+				$this->connection->error
+			);
+		}
+		
+		$stmt->execute();
+		$result_data = $stmt->get_result();
+
+		if ( ! $result_data ) {
 			return new WP_Error(
 				'db_execute_failed',
-				__( 'Error al ejecutar la consulta SQL.', 'mi-conexion-externa' ),
+				__( 'Error al obtener los datos de paginación.', 'mi-conexion-externa' ),
 				$stmt->error
 			);
 		}
 
-		$productos = $result->fetch_all( MYSQLI_ASSOC );
+		$data = $result_data->fetch_all( MYSQLI_ASSOC );
 		$stmt->close();
 
-		return $productos;
+		// 6. Devolver el paquete de datos
+		return array(
+			'data'       => $data,
+			'total_rows' => $total_rows,
+		);
 	}
 }
