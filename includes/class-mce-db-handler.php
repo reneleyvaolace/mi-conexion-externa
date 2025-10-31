@@ -98,6 +98,7 @@ class MCE_DB_Handler {
 
 	/**
 	 * Obtiene una lista de todas las tablas en la base de datos conectada.
+	 * (Para el Explorador)
 	 */
 	public function get_tables() {
 		if ( ! $this->connect() ) {
@@ -139,6 +140,7 @@ class MCE_DB_Handler {
 
 	/**
 	 * Obtiene las primeras 100 filas del contenido de una tabla específica.
+	 * (Para el Explorador)
 	 *
 	 * @param string $table_name El nombre de la tabla a consultar.
 	 * @return array|WP_Error Un array de filas si tiene éxito, o un WP_Error.
@@ -152,7 +154,7 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 1️⃣ Validar que la tabla existe en la BD.
+		// 1. Validar que la tabla existe en la BD.
 		$available_tables = $this->get_tables();
 		if ( is_wp_error( $available_tables ) || ! in_array( $table_name, $available_tables, true ) ) {
 			return new WP_Error(
@@ -162,16 +164,11 @@ class MCE_DB_Handler {
 			);
 		}
 
-		// 2️⃣ Protección adicional: eliminar caracteres no válidos.
+		// 2. Protección adicional: eliminar caracteres no válidos.
 		$table_name = preg_replace( '/[^A-Za-z0-9_]/', '', $table_name );
 
-		// 3️⃣ Construir la consulta SQL de forma segura (sin backslashes).
-		$sql = "SELECT * FROM `" . $table_name . "` LIMIT 100;";
-
-		// (Opcional) — registrar el SQL ejecutado en debug.log
-		// if ( defined('WP_DEBUG') && WP_DEBUG ) {
-		// 	error_log( '[MCE_DB_Handler] SQL Ejecutado: ' . $sql );
-		// }
+		// 3. Construir la consulta SQL de forma segura (sin backslashes).
+		$sql = "SELECT * FROM \`" . $table_name . "\` LIMIT 100;";
 
 		$stmt = $this->connection->prepare( $sql );
 		if ( $stmt === false ) {
@@ -198,5 +195,60 @@ class MCE_DB_Handler {
 		$stmt->close();
 
 		return $data;
+	}
+
+	/**
+	 * *** FUNCIÓN AÑADIDA DE VUELTA ***
+	 * Obtiene todos los productos de la tabla 'mce_productos'.
+	 * (Para el Shortcode)
+	 *
+	 * @return array|WP_Error Un array de productos si tiene éxito,
+	 * o un WP_Error si falla.
+	 */
+	public function get_productos() {
+		// 1. Intentar conectar.
+		if ( ! $this->connect() ) {
+			return new WP_Error(
+				'db_connection_failed',
+				__( 'No se pudo conectar a la base de datos externa.', 'mi-conexion-externa' ),
+				$this->connection_error
+			);
+		}
+
+		// 2. Definir la consulta.
+		$sql = 'SELECT id, nombre, sku, precio, stock FROM mce_productos ORDER BY nombre ASC';
+
+		// 3. Preparar la consulta (Regla 1: Prepared Statements).
+		$stmt = $this->connection->prepare( $sql );
+		if ( $stmt === false ) {
+			return new WP_Error(
+				'db_prepare_failed',
+				__( 'Error al preparar la consulta SQL.', 'mi-conexion-externa' ),
+				$this->connection->error
+			);
+		}
+
+		// 4. Ejecutar la consulta.
+		$stmt->execute();
+
+		// 5. Obtener los resultados.
+		$result = $stmt->get_result();
+
+		if ( ! $result ) {
+			return new WP_Error(
+				'db_execute_failed',
+				__( 'Error al ejecutar la consulta SQL.', 'mi-conexion-externa' ),
+				$stmt->error
+			);
+		}
+
+		// 6. Convertir resultados a un array asociativo.
+		$productos = $result->fetch_all( MYSQLI_ASSOC );
+
+		// 7. Limpiar.
+		$stmt->close();
+
+		// 8. Devolver los datos.
+		return $productos;
 	}
 }
