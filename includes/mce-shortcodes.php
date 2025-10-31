@@ -27,9 +27,7 @@ add_action( 'wp_enqueue_scripts', 'mce_register_public_styles' );
 
 /**
  * 2. REGISTRAR EL SHORTCODE
- *
- * *** ¡CAMBIO! ***
- * Reemplazamos el shortcode antiguo por uno genérico.
+ * (Sin cambios)
  */
 function mce_register_shortcodes() {
 	// Eliminamos el shortcode antiguo (si existiera en caché)
@@ -37,7 +35,7 @@ function mce_register_shortcodes() {
 	
 	// Añadimos el nuevo shortcode genérico
 	add_shortcode(
-		'mce_mostrar_tabla', // El shortcode: [mce_mostrar_tabla tabla="..." columnas="..." limite="..."]
+		'mce_mostrar_tabla', // El shortcode: [mce_mostrar_tabla tabla="..." columnas="..." limite="..." columnas_mostrar="..."]
 		'mce_render_tabla_shortcode' // La función que se ejecutará
 	);
 }
@@ -58,92 +56,99 @@ function mce_render_tabla_shortcode( $atts ) {
 	}
 
 	// 2. Parsear los atributos del shortcode
+	// *** ¡NUEVO! Se añade 'columnas_mostrar' ***
 	$a = shortcode_atts(
 		array(
-			'tabla'    => '',
-			'columnas' => 3,
-			'limite'   => 10,
+			'tabla'            => '',
+			'columnas'         => 3,
+			'limite'           => 10,
+			'columnas_mostrar' => '', // Nuevo: string vacío por defecto
 		),
 		$atts
 	);
 
 	// 3. Sanitizar todos los atributos (Regla 1: Seguridad)
-	$tabla    = sanitize_text_field( $a['tabla'] );
-	$columnas = intval( $a['columnas'] );
-	$limite   = intval( $a['limite'] );
+	$tabla              = sanitize_text_field( $a['tabla'] );
+	$columnas           = intval( $a['columnas'] );
+	$limite             = intval( $a['limite'] );
+	$columnas_a_mostrar_str = sanitize_text_field( $a['columnas_mostrar'] );
 
 	// Forzar valores seguros
-	if ( $columnas < 1 || $columnas > 6 ) {
-		$columnas = 3;
-	}
-	if ( $limite <= 0 ) {
-		$limite = 10;
+	if ( $columnas < 1 || $columnas > 6 ) { $columnas = 3; }
+	if ( $limite <= 0 ) { $limite = 10; }
+
+	// *** ¡NUEVO! ***
+	// 4. Convertir el string 'columnas_mostrar' en un array limpio
+	$columnas_a_mostrar = array();
+	if ( ! empty( $columnas_a_mostrar_str ) ) {
+		// 1. Divide el string por comas -> [" nombre", "precio ", " sku"]
+		$temp_array = explode( ',', $columnas_a_mostrar_str );
+		// 2. Limpia los espacios en blanco de cada elemento -> ["nombre", "precio", "sku"]
+		$columnas_a_mostrar = array_map( 'trim', $temp_array );
 	}
 
-	// 4. Obtener los datos usando nuestro "cerebro".
+	// 5. Obtener los datos usando nuestro "cerebro".
 	$db_handler = new MCE_DB_Handler();
-	// Usamos la función genérica (la que corregiste)
 	$data = $db_handler->get_table_content( $tabla, $limite );
 
-	// 5. Manejar Errores (Conexión, tabla inválida, etc.)
+	// 6. Manejar Errores (Conexión, tabla inválida, etc.)
 	if ( is_wp_error( $data ) ) {
-		// Mostrar un error solo a los administradores.
 		if ( current_user_can( 'manage_options' ) ) {
 			return '<p style="color:red;">' . esc_html( __( 'Error del Plugin [MCE]:', 'mi-conexion-externa' ) . ' ' . $data->get_error_message() ) . '</p>';
 		}
-		return ''; // No mostrar nada al público.
+		return '';
 	}
 
-	// 6. Manejar Tabla Vacía
+	// 7. Manejar Tabla Vacía
 	if ( empty( $data ) ) {
 		return '<p>' . esc_html( sprintf( __( 'No se encontraron datos en la tabla "%s".', 'mi-conexion-externa' ), $tabla ) ) . '</p>';
 	}
 
-	// 7. ¡Éxito! Cargar el CSS.
+	// 8. ¡Éxito! Cargar el CSS.
 	wp_enqueue_style( 'mce-public-style' );
 
-	// 8. Crear el estilo en línea para las columnas.
+	// 9. Crear el estilo en línea para las columnas.
 	$inline_style = sprintf(
 		'grid-template-columns: repeat(%d, 1fr);',
 		$columnas
 	);
 
-	// 9. Construir el HTML.
+	// 10. Construir el HTML.
 	ob_start();
 	?>
 
 	<div class="mce-productos-grid" style="<?php echo esc_attr( $inline_style ); ?>">
 
-		<?php foreach ( $data as $row ) : // Iterar sobre cada fila (cada "producto") ?>
+		<?php foreach ( $data as $row ) : // Iterar sobre cada fila ?>
 			
 			<div class="mce-producto-card">
 				
-				<?php foreach ( $row as $key => $value ) : // Iterar sobre las columnas (ej. 'nombre', 'sku', 'documento_pdf') ?>
+				<?php foreach ( $row as $key => $value ) : // Iterar sobre las columnas (key => value) ?>
 					
+					<?php
+					// *** ¡NUEVA LÓGICA DE FILTRADO! ***
+					// Si el usuario especificó una lista, y esta columna NO está
+					// en la lista, nos la saltamos y no la mostramos.
+					if ( ! empty( $columnas_a_mostrar ) && ! in_array( $key, $columnas_a_mostrar, true ) ) {
+						continue; // Saltar a la siguiente columna
+					}
+					?>
+
 					<div class="mce-card-item">
 						<strong><?php echo esc_html( $key ); ?>:</strong>
 						<span>
 							<?php
-							// *** ¡LÓGICA DE PDF! (Tu Requisito) ***
-							
-							// 1. Limpiar el valor para comprobaciones
+							// Lógica de detección de PDF (sin cambios)
 							$clean_value = trim( (string) $value );
 							
-							// 2. Comprobar si es un enlace PDF
 							if ( str_starts_with( $clean_value, 'http' ) && str_ends_with( strtolower( $clean_value ), '.pdf' ) ) {
-								
-								// 3. Si es PDF, imprimir un enlace seguro (Regla 1: esc_url)
 								?>
 								<a href="<?php echo esc_url( $clean_value ); ?>" target="_blank" rel="noopener noreferrer">
 									<?php echo esc_html( __( 'Ver PDF', 'mi-conexion-externa' ) ); ?>
 								</a>
 								<?php
-								
 							} else {
-								
-								// 4. Si no, solo imprimir el texto seguro (Regla 1: esc_html)
 								echo esc_html( $value );
-								
 							}
 							?>
 						</span>
@@ -152,6 +157,6 @@ function mce_render_tabla_shortcode( $atts ) {
 			</div> <?php endforeach; // Fin del bucle de filas (row) ?>
 
 	</div> <?php
-	// 10. Devolver el HTML capturado.
+	// 11. Devolver el HTML capturado.
 	return ob_get_clean();
 }
