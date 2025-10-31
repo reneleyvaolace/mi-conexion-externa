@@ -54,7 +54,6 @@ class MCE_DB_Handler {
 
 	/**
 	 * Destructor. Cierra la conexión automáticamente al final.
-	 * (Regla 1: Gestión de Recursos Limpia).
 	 */
 	public function __destruct() {
 		if ( $this->connection ) {
@@ -68,7 +67,7 @@ class MCE_DB_Handler {
 	 * @return bool True si la conexión es exitosa, False si falla.
 	 */
 	private function connect() {
-		// 1. Si ya estamos conectados, no hacer nada (Regla 1: Eficiencia).
+		// 1. Si ya estamos conectados, no hacer nada.
 		if ( $this->connection ) {
 			return true;
 		}
@@ -91,7 +90,7 @@ class MCE_DB_Handler {
 			return false;
 		}
 
-		// 5. Establecer charset (Regla 1: Mejor Práctica).
+		// 5. Establecer charset.
 		if ( ! $this->connection->set_charset( 'utf8mb4' ) ) {
 			$this->connection_error = __( 'Error al establecer el charset utf8mb4.', 'mi-conexion-externa' );
 			$this->connection->close();
@@ -121,7 +120,7 @@ class MCE_DB_Handler {
 		// 2. Definir la consulta.
 		$sql = 'SELECT id, nombre, sku, precio, stock FROM mce_productos ORDER BY nombre ASC';
 
-		// 3. Preparar la consulta (Regla 1: Prepared Statements).
+		// 3. Preparar la consulta.
 		$stmt = $this->connection->prepare( $sql );
 		if ( $stmt === false ) {
 			return new WP_Error(
@@ -153,5 +152,58 @@ class MCE_DB_Handler {
 
 		// 8. Devolver los datos.
 		return $productos;
+	}
+
+	/**
+	 * *** MÉTODO NUEVO ***
+	 * Obtiene una lista de todas las tablas en la base de datos conectada.
+	 *
+	 * @return array|WP_Error Un array de nombres de tablas si tiene éxito,
+	 * o un WP_Error si falla.
+	 */
+	public function get_tables() {
+		// 1. Intentar conectar.
+		if ( ! $this->connect() ) {
+			return new WP_Error(
+				'db_connection_failed',
+				__( 'No se pudo conectar a la base de datos externa.', 'mi-conexion-externa' ),
+				$this->connection_error
+			);
+		}
+
+		// 2. Definir la consulta.
+		$sql = 'SHOW TABLES;';
+
+		// 3. Preparar y ejecutar.
+		$stmt = $this->connection->prepare( $sql );
+		if ( $stmt === false ) {
+			return new WP_Error(
+				'db_prepare_failed',
+				__( 'Error al preparar la consulta SQL.', 'mi-conexion-externa' ),
+				$this->connection->error
+			);
+		}
+		$stmt->execute();
+		$result = $stmt->get_result();
+
+		if ( ! $result ) {
+			return new WP_Error(
+				'db_execute_failed',
+				__( 'Error al ejecutar la consulta SQL.', 'mi-conexion-externa' ),
+				$stmt->error
+			);
+		}
+
+		// 6. Convertir resultados a un array simple.
+		$tables = array();
+		while ( $row = $result->fetch_array( MYSQLI_NUM ) ) {
+			$tables[] = $row[0];
+		}
+
+		// 7. Limpiar.
+		$stmt->close();
+
+		// 8. Devolver los datos.
+		return $tables;
 	}
 }

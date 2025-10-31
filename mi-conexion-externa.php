@@ -37,7 +37,7 @@ register_activation_hook( MCE_PLUGIN_FILE, 'mce_plugin_activate' );
  */
 function mce_plugin_deactivate() {
 }
-register_deactivation_hook( MCE_PLUGIN_FILE, 'mce_plugin_deactivate' );
+register_activation_hook( MCE_PLUGIN_FILE, 'mce_plugin_deactivate' );
 
 /**
  * Carga del núcleo del Plugin.
@@ -54,15 +54,14 @@ function mce_load_plugin_core() {
 	// --- Cargamos nuestros archivos principales ---
 
 	// 1. Cargamos el manejador de la BBDD (Global).
-	// (Debe cargarse primero, ya que las páginas de admin dependen de él).
 	require_once MCE_PLUGIN_DIR . 'includes/class-mce-db-handler.php';
 
 	// 2. Cargamos el archivo de la página de ajustes (Solo Admin).
 	require_once MCE_PLUGIN_DIR . 'admin/class-mce-settings-page.php';
 	
 	// *** LÍNEA ACTUALIZADA ***
-	// 3. Cargamos la nueva página de "Ver Productos" (Solo Admin).
-	require_once MCE_PLUGIN_DIR . 'admin/class-mce-productos-page.php';
+	// 3. Cargamos la nueva página de "Consultas" (Solo Admin).
+	require_once MCE_PLUGIN_DIR . 'admin/class-mce-query-page.php';
 
 }
 // Usamos 'plugins_loaded' para cargar nuestros archivos principales.
