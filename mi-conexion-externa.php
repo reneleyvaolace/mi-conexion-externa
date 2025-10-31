@@ -35,7 +35,6 @@ define( 'MCE_PLUGIN_FILE', __FILE__ );
  */
 function mce_plugin_activate() {
 	// (Próximos pasos: Aquí podríamos verificar la versión de PHP o WP)
-	// (Próximos pasos: Aquí podríamos establecer una opción de 'versión_db' si creamos tablas)
 }
 register_activation_hook( MCE_PLUGIN_FILE, 'mce_plugin_activate' );
 
@@ -67,13 +66,17 @@ function mce_load_plugin_core() {
 		dirname( plugin_basename( MCE_PLUGIN_FILE ) ) . '/languages/'
 	);
 
-	// *** LÍNEA ACTUALIZADA ***
-	// Cargamos el archivo de la página de ajustes.
+	// --- Cargamos nuestros archivos principales ---
+
+	// 1. Cargamos el archivo de la página de ajustes (Solo Admin).
 	require_once MCE_PLUGIN_DIR . 'admin/class-mce-settings-page.php';
 	
-	// (Próximos pasos: Aquí incluiremos nuestros archivos de 'includes')
+	// *** LÍNEA ACTUALIZADA ***
+	// 2. Cargamos el manejador de la BBDD (Global).
+	require_once MCE_PLUGIN_DIR . 'includes/class-mce-db-handler.php';
+
+	// (Próximos pasos: Aquí incluiremos nuestros archivos de 'includes' si tuviéramos más)
 	// require_once MCE_PLUGIN_DIR . 'includes/mce-functions.php';
-	// require_once MCE_PLUGIN_DIR . 'includes/class-mce-api-handler.php';
 
 }
 // Usamos 'plugins_loaded' para cargar nuestros archivos principales.
