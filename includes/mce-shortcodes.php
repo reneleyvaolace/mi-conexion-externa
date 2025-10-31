@@ -49,16 +49,16 @@ function mce_render_tabla_shortcode( $atts ) {
 
 	// 1. Validar el atributo OBLIGATORIO 'tabla'.
 	if ( empty( $atts['tabla'] ) ) {
-		return '<p style="color:red;">'J . esc_html( __( 'Error del Plugin [MCE]: Falta el atributo "tabla" en el shortcode. Ej: [mce_mostrar_tabla tabla="su_tabla"]', 'mi-conexion-externa' ) ) . '</p>';
+		// *** ¡LÍNEA CORREGIDA! *** Se eliminó la 'J'
+		return '<p style="color:red;">' . esc_html( __( 'Error del Plugin [MCE]: Falta el atributo "tabla" en el shortcode. Ej: [mce_mostrar_tabla tabla="su_tabla"]', 'mi-conexion-externa' ) ) . '</p>';
 	}
 
 	// 2. Parsear los atributos del shortcode
-	// *** ¡NUEVO! Se añade 'paginacion' (reemplaza a 'limite') ***
 	$a = shortcode_atts(
 		array(
 			'tabla'             => '',
 			'columnas'          => 3,
-			'paginacion'        => 10, // Nuevo: filas por página (reemplaza a 'limite')
+			'paginacion'        => 10,
 			'columnas_mostrar'  => '',
 			'llave_titulo'      => '',
 			'ocultar_etiquetas' => '',
@@ -66,10 +66,10 @@ function mce_render_tabla_shortcode( $atts ) {
 		$atts
 	);
 
-	// 3. Sanitizar todos los atributos (Regla 1: Seguridad)
+	// 3. Sanitizar todos los atributos
 	$tabla                   = sanitize_text_field( $a['tabla'] );
 	$columnas                = intval( $a['columnas'] );
-	$filas_por_pagina        = intval( $a['paginacion'] ); // Nuevo
+	$filas_por_pagina        = intval( $a['paginacion'] );
 	$columnas_a_mostrar_str    = sanitize_text_field( $a['columnas_mostrar'] );
 	$llave_titulo            = sanitize_text_field( $a['llave_titulo'] );
 	$etiquetas_a_ocultar_str = sanitize_text_field( $a['ocultar_etiquetas'] );
@@ -78,9 +78,7 @@ function mce_render_tabla_shortcode( $atts ) {
 	if ( $columnas < 1 || $columnas > 6 ) { $columnas = 3; }
 	if ( $filas_por_pagina <= 0 ) { $filas_por_pagina = 10; }
 
-	// *** ¡NUEVA LÓGICA DE PAGINACIÓN! ***
-	// 4. Obtener la página actual de la URL (Regla 1: Seguridad)
-	// Usamos un parámetro de URL único para evitar conflictos (ej. ?pagina_mce=2)
+	// 4. Obtener la página actual de la URL
 	$pagina_actual = 1;
 	if ( isset( $_GET['pagina_mce'] ) ) {
 		$pagina_actual = intval( $_GET['pagina_mce'] );
@@ -97,7 +95,7 @@ function mce_render_tabla_shortcode( $atts ) {
 		$etiquetas_a_ocultar = array_map( 'trim', explode( ',', $etiquetas_a_ocultar_str ) );
 	}
 
-	// 6. Obtener los datos usando nuestro "cerebro" (¡la nueva función!)
+	// 6. Obtener los datos usando nuestro "cerebro"
 	$db_handler = new MCE_DB_Handler();
 	$resultado = $db_handler->get_paginated_table_data( $tabla, $filas_por_pagina, $pagina_actual );
 
@@ -115,11 +113,9 @@ function mce_render_tabla_shortcode( $atts ) {
 
 	// 9. Manejar Tabla Vacía
 	if ( empty( $data ) ) {
-		// Si estamos en la página 1 y no hay datos, la tabla está vacía.
 		if ( $pagina_actual === 1 ) {
 			return '<p>' . esc_html( sprintf( __( 'No se encontraron datos en la tabla "%s".', 'mi-conexion-externa' ), $tabla ) ) . '</p>';
 		} else {
-			// Si estamos en una página > 1 y no hay datos, es un error (ej. ?pagina_mce=99)
 			return '<p>' . esc_html( __( 'No se encontraron datos para esta página.', 'mi-conexion-externa' ) ) . '</p>';
 		}
 	}
@@ -184,20 +180,16 @@ function mce_render_tabla_shortcode( $atts ) {
 				<?php echo '</div>'; // Fin de .mce-card-meta ?>
 			</div> <?php endforeach; // Fin del bucle de filas (row) ?>
 	</div> <?php
-	// *** ¡NUEVO! 13. DIBUJAR LOS ENLACES DE PAGINACIÓN ***
-	
-	// Calcular el total de páginas
+	// 13. DIBUJAR LOS ENLACES DE PAGINACIÓN
 	$total_paginas = ceil( $total_filas / $filas_por_pagina );
 
-	// Solo mostrar la paginación si hay más de 1 página
 	if ( $total_paginas > 1 ) {
 		
-		// Usamos la función nativa de WordPress (Regla 1: WordPress Way)
 		echo '<div class="mce-pagination">';
 		echo paginate_links(
 			array(
-				'base'      => get_permalink() . '%_%', // La URL base
-				'format'    => '?pagina_mce=%#%',      // Nuestro parámetro de URL
+				'base'      => get_permalink() . '%_%',
+				'format'    => '?pagina_mce=%#%',
 				'current'   => $pagina_actual,
 				'total'     => $total_paginas,
 				'prev_text' => __( '&laquo; Anterior', 'mi-conexion-externa' ),
