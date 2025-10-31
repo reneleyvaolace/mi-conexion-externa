@@ -33,12 +33,13 @@ class MCE_Settings_Page {
 	private $settings_page_slug = 'mce-settings';
 
 	/**
-	 * Constructor. Engancha los métodos a los hooks de WordPress.
+	 * Constructor.
+	 *
+	 * *** CAMBIO: Ya no se engancha a 'admin_menu' ***
+	 * Esta clase ya no crea su propio menú. Solo registra
+	 * los campos de configuración.
 	 */
 	public function __construct() {
-		// Hook para añadir el menú de administración.
-		// add_action( 'admin_menu', array( $this, 'add_plugin_settings_page' ) );
-
 		// Hook para registrar nuestros ajustes.
 		add_action( 'admin_init', array( $this, 'register_and_build_fields' ) );
 
@@ -56,7 +57,8 @@ class MCE_Settings_Page {
 	 */
 	public function enqueue_admin_scripts( $hook_suffix ) {
 		// Comprueba si estamos en nuestra página de ajustes.
-		if ( 'settings_page_mce-settings' !== $hook_suffix ) {
+		// *** CAMBIO: Ahora buscamos el hook de nuestro nuevo menú padre ***
+		if ( 'toplevel_page_mce-main-menu' !== $hook_suffix && 'conexion-externa_page_mce-settings' !== $hook_suffix ) {
 			return;
 		}
 
@@ -95,20 +97,18 @@ class MCE_Settings_Page {
 
 
 	/**
-	 * Añade la página de ajustes como un submenú de "Ajustes".
+	 * *** CAMBIO: Esta función ahora es 'public' ***
+	 * pero ya no es llamada por un 'add_action' en esta clase.
+	 * Será llamada por la clase 'MCE_Query_Page'.
 	 */
 	public function add_plugin_settings_page() {
-		add_options_page(
-			__( 'Mi Conexión Externa', 'mi-conexion-externa' ),
-			__( 'Mi Conexión Externa', 'mi-conexion-externa' ),
-			'manage_options',
-			$this->settings_page_slug, 
-			array( $this, 'create_settings_page_content' )
-		);
+		// Esta función ya no es necesaria aquí.
+		// El menú se añade en 'MCE_Query_Page'.
 	}
 
 	/**
 	 * Renderiza el contenido HTML de la página de ajustes.
+	 * Esta función es AHORA 'public' para ser llamada desde otra clase.
 	 */
 	public function create_settings_page_content() {
 		$this->options = get_option( 'mce_db_settings' );
@@ -197,6 +197,7 @@ class MCE_Settings_Page {
 
 	/**
 	 * Callback para sanitizar CADA campo antes de guardarlo.
+	 * (Sin cambios)
 	 */
 	public function sanitize_settings( $input ) {
 		$sanitized_input = array();
@@ -231,28 +232,23 @@ class MCE_Settings_Page {
 	public function print_section_info() {
 		echo esc_html( __( 'Introduce las credenciales para la conexión directa a la base de datos.', 'mi-conexion-externa' ) );
 	}
-
 	public function db_ip_callback() {
 		$value = isset( $this->options['mce_db_ip'] ) ? esc_attr( $this->options['mce_db_ip'] ) : '';
 		printf( '<input type="text" id="mce_db_ip" name="mce_db_settings[mce_db_ip]" value="%s" class="regular-text" />', $value );
 	}
-
 	public function db_port_callback() {
 		$value = isset( $this->options['mce_db_port'] ) ? esc_attr( $this->options['mce_db_port'] ) : '3306';
 		printf( '<input type="number" id="mce_db_port" name="mce_db_settings[mce_db_port]" value="%s" class="small-text" />', $value );
 		echo ' <p class="description" style="display:inline-block">' . esc_html__( '(Ej. 3306 para MySQL por defecto)', 'mi-conexion-externa' ) . '</p>';
 	}
-
 	public function db_name_callback() {
 		$value = isset( $this->options['mce_db_name'] ) ? esc_attr( $this->options['mce_db_name'] ) : '';
 		printf( '<input type="text" id="mce_db_name" name="mce_db_settings[mce_db_name]" value="%s" class="regular-text" />', $value );
 	}
-
 	public function db_user_callback() {
 		$value = isset( $this->options['mce_db_user'] ) ? esc_attr( $this->options['mce_db_user'] ) : '';
 		printf( '<input type="text" id="mce_db_user" name="mce_db_settings[mce_db_user]" value="%s" class="regular-text" />', $value );
 	}
-
 	public function db_pass_callback() {
 		$value = isset( $this->options['mce_db_pass'] ) ? esc_attr( $this->options['mce_db_pass'] ) : '';
 		printf( '<input type="password" id="mce_db_pass" name="mce_db_settings[mce_db_pass]" value="%s" class="regular-text" />', $value );
@@ -260,13 +256,11 @@ class MCE_Settings_Page {
 
 
 	/**
-	 * *** FUNCIÓN MODIFICADA ***
-	 *
-	 * El "cerebro" de la prueba de conexión AJAX.
-	 * Ahora con detección de errores comunes y mensajes amigables.
+	 * Función de prueba de conexión AJAX.
+	 * (Sin cambios)
 	 */
 	public function handle_ajax_test_connection() {
-		// 1. Seguridad: Verificar el Nonce (Regla 1).
+		// 1. Seguridad: Verificar el Nonce.
 		check_ajax_referer( 'mce_test_nonce', 'security' );
 
 		// 2. Obtener las credenciales guardadas.
@@ -294,38 +288,28 @@ class MCE_Settings_Page {
 
 		// 5. Devolver la respuesta JSON.
 		if ( ! $link ) {
-			// *** SECCIÓN DE LÓGICA DE ERRORES MEJORADA ***
+			// Lógica de errores mejorada (sin cambios)
 			$raw_error_message = mysqli_connect_error();
 			$friendly_message = '';
 			$solution_message = '';
 
-			// CASO 1: Detectar el error de 'flush-hosts'.
 			if ( strpos( $raw_error_message, 'is blocked because of many connection errors' ) !== false ) {
 				$friendly_message = __( 'FALLO LA CONEXIÓN (Servidor Bloqueado)', 'mi-conexion-externa' );
 				$solution_message = __( '<strong>Posible Solución:</strong> El servidor de la base de datos ha bloqueado tu IP (la de este sitio web) debido a múltiples intentos fallidos. Debes contactar al administrador de esa base de datos y pedirle que ejecute el comando <code>mysqladmin flush-hosts</code> o la consulta SQL <code>FLUSH HOSTS;</code> para desbloquearla.', 'mi-conexion-externa' );
-			
-			// CASO 2: Detectar 'Acceso Denegado' (usuario/contraseña).
 			} elseif ( strpos( $raw_error_message, 'Access denied for user' ) !== false ) {
 				$friendly_message = __( 'FALLO LA CONEXIÓN (Acceso Denegado)', 'mi-conexion-externa' );
 				$solution_message = __( '<strong>Posible Solución:</strong> El usuario o la contraseña son incorrectos. Verifícalos y vuelve a intentarlo.', 'mi-conexion-externa' );
-			
-			// CASO 3: Detectar 'Base de Datos Desconocida'.
 			} elseif ( strpos( $raw_error_message, 'Unknown database' ) !== false ) {
 				$friendly_message = __( 'FALLO LA CONEXIÓN (Base de Datos no encontrada)', 'mi-conexion-externa' );
 				$solution_message = __( '<strong>Posible Solución:</strong> El nombre de la base de datos es incorrecto o no existe. Verifica que esté bien escrito.', 'mi-conexion-externa' );
-
-			// CASO 4: Detectar 'No se puede conectar' (Firewall / IP / Puerto).
 			} elseif ( strpos( $raw_error_message, 'Can\'t connect to MySQL server' ) !== false || strpos( $raw_error_message, 'Connection timed out' ) !== false ) {
 				$friendly_message = __( 'FALLO LA CONEXIÓN (No se puede alcanzar el servidor)', 'mi-conexion-externa' );
 				$solution_message = __( '<strong>Posible Solución:</strong> Verifica la IP y el Puerto. Si son correctos, es muy probable que un <strong>Firewall</strong> esté bloqueando la conexión. Asegúrate de que el servidor de la BBDD permite conexiones remotas desde la IP de este sitio web.', 'mi-conexion-externa' );
-			
-			// CASO 5: Error genérico (mostramos el error original).
 			} else {
 				$friendly_message = __( 'FALLO LA CONEXIÓN (Error Desconocido)', 'mi-conexion-externa' );
 				$solution_message = __( '<strong>Mensaje Original:</strong>', 'mi-conexion-externa' ) . ' ' . esc_html( $raw_error_message );
 			}
 
-			// Construir el mensaje final.
 			$final_message = $friendly_message . '<br>' . $solution_message;
 
 			wp_send_json_error(
@@ -333,7 +317,6 @@ class MCE_Settings_Page {
 					'message' => $final_message,
 				)
 			);
-			// *** FIN DE LA SECCIÓN MEJORADA ***
 
 		} else {
 			// La conexión fue exitosa.
@@ -344,14 +327,8 @@ class MCE_Settings_Page {
 				)
 			);
 		}
-
-		// wp_die() es llamado implícitamente por wp_send_json_...
 	}
 }
 
-/**
- * La comprobación 'is_admin()' es crucial.
- */
-if ( is_admin() ) {
-	new MCE_Settings_Page();
-}
+// *** CAMBIO: Ya no hay 'if (is_admin())' aquí. ***
+// La instanciación se moverá al archivo principal.

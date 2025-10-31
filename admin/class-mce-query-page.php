@@ -11,7 +11,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * *** CLASE RENOMBRADA ***
  * Clase MCE_Query_Page
  *
  * Crea el menú de nivel superior y la página para explorar la BBDD.
@@ -19,9 +18,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 class MCE_Query_Page {
 
 	/**
-	 * Constructor. Engancha los métodos a los hooks de WordPress.
+	 * *** NUEVO: Almacena el objeto de la página de ajustes ***
+	 *
+	 * @var MCE_Settings_Page
 	 */
-	public function __construct() {
+	private $settings_page;
+
+	/**
+	 * *** CAMBIO: El Constructor ahora acepta la dependencia ***
+	 *
+	 * @param MCE_Settings_Page $settings_page La instancia de la página de ajustes.
+	 */
+	public function __construct( $settings_page ) {
+		$this->settings_page = $settings_page;
 		add_action( 'admin_menu', array( $this, 'register_admin_pages' ) );
 	}
 
@@ -35,7 +44,7 @@ class MCE_Query_Page {
 			__( 'Conexión Externa', 'mi-conexion-externa' ),
 			'manage_options',
 			'mce-main-menu',
-			array( $this, 'create_query_page_content' ), // *** CAMBIADO ***
+			array( $this, 'create_query_page_content' ),
 			'dashicons-database-view',
 			20
 		);
@@ -43,42 +52,40 @@ class MCE_Query_Page {
 		// 2. Añadir la página de "Explorador" como submenú
 		add_submenu_page(
 			'mce-main-menu',
-			__( 'Explorador de BBDD', 'mi-conexion-externa' ), // *** CAMBIADO ***
-			__( 'Explorador', 'mi-conexion-externa' ),     // *** CAMBIADO ***
+			__( 'Explorador de BBDD', 'mi-conexion-externa' ),
+			__( 'Explorador', 'mi-conexion-externa' ),
 			'manage_options',
 			'mce-main-menu',
-			array( $this, 'create_query_page_content' ) // *** CAMBIADO ***
+			array( $this, 'create_query_page_content' )
 		);
 
 		// 3. Añadir nuestra página de "Ajustes"
-		remove_submenu_page( 'options-general.php', 'mce-settings' );
+		// *** CAMBIO: El callback ahora usa el objeto inyectado ***
 		add_submenu_page(
 			'mce-main-menu',
-			__( 'Ajustes de Conexión', 'mi-conexion-extexrna' ),
+			__( 'Ajustes de Conexión', 'mi-conexion-externa' ),
 			__( 'Ajustes', 'mi-conexion-externa' ),
 			'manage_options',
-			'mce-settings',
-			array( $this, 'redirect_to_settings_page' )
+			'mce-settings', // El slug debe coincidir con el usado en la clase de ajustes.
+			array( $this->settings_page, 'create_settings_page_content' ) // ¡ARREGLADO!
 		);
 	}
 
 	/**
-	 * Callback vacío para el menú de ajustes.
+	 * *** CAMBIO: Eliminada la función 'redirect_to_settings_page' ***
+	 * Ya no es necesaria.
 	 */
-	public function redirect_to_settings_page() {
-		// La clase MCE_Settings_Page se encarga de esto.
-	}
 
 
 	/**
-	 * *** MÉTODO MODIFICADO ***
 	 * Renderiza el contenido HTML de la página "Explorador".
+	 * (Sin cambios)
 	 */
 	public function create_query_page_content() {
 		// 1. Instanciar nuestro manejador de BBDD
 		$db_handler = new MCE_DB_Handler();
 
-		// 2. Obtener las TABLAS (en lugar de productos)
+		// 2. Obtener las TABLAS
 		$tables = $db_handler->get_tables();
 		?>
 		<div class="wrap">
@@ -125,9 +132,5 @@ class MCE_Query_Page {
 	}
 }
 
-/**
- * La comprobación 'is_admin()' es crucial.
- */
-if ( is_admin() ) {
-	new MCE_Query_Page();
-}
+// *** CAMBIO: Ya no hay 'if (is_admin())' aquí. ***
+// La instanciación se moverá al archivo principal.

@@ -37,7 +37,7 @@ register_activation_hook( MCE_PLUGIN_FILE, 'mce_plugin_activate' );
  */
 function mce_plugin_deactivate() {
 }
-register_activation_hook( MCE_PLUGIN_FILE, 'mce_plugin_deactivate' );
+register_deactivation_hook( MCE_PLUGIN_FILE, 'mce_plugin_deactivate' );
 
 /**
  * Carga del núcleo del Plugin.
@@ -51,18 +51,21 @@ function mce_load_plugin_core() {
 		dirname( plugin_basename( MCE_PLUGIN_FILE ) ) . '/languages/'
 	);
 
-	// --- Cargamos nuestros archivos principales ---
-
-	// 1. Cargamos el manejador de la BBDD (Global).
+	// --- 1. Cargamos los archivos de clases ---
 	require_once MCE_PLUGIN_DIR . 'includes/class-mce-db-handler.php';
-
-	// 2. Cargamos el archivo de la página de ajustes (Solo Admin).
 	require_once MCE_PLUGIN_DIR . 'admin/class-mce-settings-page.php';
-	
-	// *** LÍNEA ACTUALIZADA ***
-	// 3. Cargamos la nueva página de "Consultas" (Solo Admin).
 	require_once MCE_PLUGIN_DIR . 'admin/class-mce-query-page.php';
 
+	// --- 2. Instanciamos las clases solo si estamos en el Admin ---
+	// *** ESTA ES LA NUEVA LÓGICA DE "CABLEADO" ***
+	if ( is_admin() ) {
+		// 1. Creamos la página de Ajustes.
+		$mce_settings = new MCE_Settings_Page();
+
+		// 2. Creamos la página del Explorador y le "inyectamos"
+		//    la página de ajustes para que pueda manejar el menú.
+		$mce_query_page = new MCE_Query_Page( $mce_settings );
+	}
 }
 // Usamos 'plugins_loaded' para cargar nuestros archivos principales.
 add_action( 'plugins_loaded', 'mce_load_plugin_core' );
