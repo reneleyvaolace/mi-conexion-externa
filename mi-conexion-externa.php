@@ -37,7 +37,7 @@ register_activation_hook( MCE_PLUGIN_FILE, 'mce_plugin_activate' );
  */
 function mce_plugin_deactivate() {
 }
-register_activation_hook( MCE_PLUGIN_FILE, 'mce_plugin_deactivate' );
+register_deactivation_hook( MCE_PLUGIN_FILE, 'mce_plugin_deactivate' );
 
 /**
  * Carga del núcleo del Plugin.
@@ -97,7 +97,7 @@ function mce_output_custom_css() {
 		$sanitized_css = wp_strip_all_tags( $custom_css );
 		
 		echo '' . "\n";
-		echo '<style type"text/css" id="mce-custom-styles">' . "\n";
+		echo '<style type="text/css" id="mce-custom-styles">' . "\n";
 		echo $sanitized_css;
 		echo "\n" . '</style>' . "\n";
 	}

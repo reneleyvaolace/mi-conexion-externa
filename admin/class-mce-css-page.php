@@ -53,18 +53,14 @@ class MCE_CSS_Page {
 
 	/**
 	 * Sanitiza el CSS antes de guardarlo.
-	 * Elimina etiquetas <script> y HTML peligroso, pero permite CSS.
 	 *
 	 * @param string $input El CSS crudo del textarea.
 	 * @return string El CSS sanitizado.
 	 */
 	public function sanitize_css( $input ) {
-		// wp_strip_all_tags es demasiado agresivo (rompería el CSS).
-		// Usamos un equilibrio: removemos etiquetas <script> y <style> explícitamente.
-		$input = preg_replace( '#<script(.*?)>(.*?)</script>#is', '', $input );
-		$input = preg_replace( '#<style(.*?)>(.*?)</style>#is', '', $input );
-		// Podemos añadir más reglas, pero para un admin, esto es un equilibrio razonable.
-		return $input;
+		// wp_strip_all_tags es una sanitización segura.
+		// Elimina <script> y <style>, pero preserva el CSS.
+		return wp_strip_all_tags( $input );
 	}
 
 	/**
@@ -72,72 +68,69 @@ class MCE_CSS_Page {
 	 */
 	public function print_section_info() {
 		echo '<p>' . esc_html( __( 'Añade tus propias reglas de CSS aquí para sobreescribir los estilos por defecto del shortcode.', 'mi-conexion-externa' ) ) . '</p>';
-		echo '<p>' . esc_html( __( 'Para usar la plantilla por defecto, descomenta (borra /* y */) las reglas que quieras modificar.', 'mi-conexion-externa' ) ) . '</p>';
+		echo '<p>' . esc_html( __( 'Para usar la plantilla, descomenta (borra /* y */) las reglas que quieras modificar.', 'mi-conexion-externa' ) ) . '</p>';
+		echo '<p>' . esc_html( __( 'Usa el botón "Restablecer" para volver a la plantilla por defecto (¡debes guardar los cambios después!).', 'mi-conexion-externa' ) ) . '</p>';
 	}
 
 	/**
-	 * Renderiza el campo <textarea> y lo pre-llena con la plantilla.
+	 * Obtiene la plantilla de CSS por defecto (nuestro CSS "inteligente").
+	 *
+	 * @return string
 	 */
-	public function render_css_field() {
-		// Obtener el valor guardado
-		$saved_css = get_option( 'mce_custom_css' );
-
-		// Definir la plantilla por defecto (Heredoc)
-		$default_css = '
-/* --- PLANTILLA DE ESTILOS MCE --- */
+	private function get_default_css_template() {
+		// Usamos un Heredoc para definir el string de la plantilla
+		$default_css = <<<CSS
+/* --- PLANTILLA DE ESTILOS ADAPTABLES --- */
 /* Para usar, descomenta (borra /* y */) las reglas que quieras cambiar. */
 
 /* --- Cuadrícula Principal (Grid) --- */
 /*
 .mce-productos-grid {
 	gap: 25px;
+	font-family: var(--wp--preset--font-family--body, sans-serif);
 }
 */
 
 /* --- Tarjeta Individual --- */
 /*
 .mce-producto-card {
-	background: #ffffff;
-	border: 1px solid #e0e0e0;
+	background: var(--wp--preset--color--base, #ffffff);
+	border: 1px solid var(--wp--preset--color--contrast-2, #e0e0e0);
 	border-radius: 8px;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 */
 
 /* --- Título de la Tarjeta (definido en "llave_titulo") --- */
 /*
 .mce-producto-card .mce-card-title {
-	font-size: 1.25rem;
-	font-weight: 600;
-	color: #111;
-	margin-bottom: 15px;
+	font-family: var(--wp--preset--font-family--heading, sans-serif);
+	font-size: var(--wp--preset--font-size--large, 1.25rem);
+	color: var(--wp--preset--color--foreground, #111);
+	font-weight: 700;
 }
 */
 
 /* --- Contenedor de Meta-Datos --- */
 /*
 .mce-producto-card .mce-card-meta {
-	font-size: 0.9rem;
-	color: #333;
+	color: var(--wp--preset--color--contrast-3, #333);
+	font-size: var(--wp--preset--font-size--small, 0.9rem);
 }
 */
 
 /* --- Cada Fila de Dato (ej. Sku: 123) --- */
 /*
 .mce-card-item {
-	display: flex;
 	justify-content: space-between;
-	padding: 8px 0;
-	border-bottom: 1px solid #f0f0f0;
+	border-bottom: 1px solid var(--wp--preset--color--contrast-2, #f0f0f0);
 }
 */
 
 /* --- Etiqueta de la Fila (ej. "Sku:") --- */
 /*
 .mce-card-item strong {
-	color: #555;
-	margin-right: 10px;
-	text-transform: capitalize;
+	color: var(--wp--preset--color--foreground, #111);
+	font-weight: 600;
 }
 */
 
@@ -146,38 +139,52 @@ class MCE_CSS_Page {
 .mce-card-item span {
 	text-align: right;
 	font-weight: 500;
+	color: var(--wp--preset--color--contrast-3, #333);
 }
 */
 
 /* --- Fila SIN Etiqueta (de "ocultar_etiquetas") --- */
 /*
 .mce-card-item.mce-item-no-label {
-	justify-content: flex-start;
-	font-size: 1rem;
+	font-size: var(--wp--preset--font-size--medium, 1rem);
 	font-weight: 500;
+	color: var(--wp--preset--color--foreground, #111);
 }
 */
 
 /* --- Enlace PDF --- */
 /*
 .mce-pdf-link {
-	background: #f4f4f4;
-	color: #0051d2;
+	background: var(--wp--preset--color--contrast, #f4f4f4);
+	color: var(--wp--preset--color--primary, #0051d2);
 }
 .mce-pdf-link:hover {
-	background: #e0e0e0;
-	color: #000;
+	background: var(--wp--preset--color--contrast-2, #e0e0e0);
 }
 */
-';
-		
-		// Si hay CSS guardado, lo usamos. Si no, usamos la plantilla.
+CSS;
+		// Quitar la indentación inicial del Heredoc
+		return trim( preg_replace( '/^[\t ]*/m', '', $default_css ) );
+	}
+
+	/**
+	 * Renderiza el campo <textarea> y lo pre-llena con la plantilla.
+	 */
+	public function render_css_field() {
+		$saved_css   = get_option( 'mce_custom_css' );
+		$default_css = $this->get_default_css_template();
 		$css_to_show = ! empty( $saved_css ) ? $saved_css : $default_css;
 
-		// Imprimir el textarea (Regla 1: esc_textarea)
+		// Imprimir el textarea principal
 		printf(
-			'<textarea name="mce_custom_css" id="mce_custom_css" class="large-text" rows="25" style="font-family: monospace; width: 100%%;">%s</textarea>',
+			'<textarea name="mce_custom_css" id="mce_custom_css" class="large-text" rows="25" style="font-family: monospace; width: 100%%; white-space: pre;">%s</textarea>',
 			esc_textarea( $css_to_show )
+		);
+
+		// Imprimir la plantilla oculta (para el botón de Restablecer)
+		printf(
+			'<textarea id="mce-default-css-template" style="display:none;">%s</textarea>',
+			esc_textarea( $default_css )
 		);
 	}
 
@@ -195,6 +202,31 @@ class MCE_CSS_Page {
 				submit_button();
 				?>
 			</form>
+			
+			<button type="button" id="mce-reset-css" class="button button-secondary">
+				<?php echo esc_html( __( 'Restablecer a la Plantilla por Defecto', 'mi-conexion-externa' ) ); ?>
+			</button>
+
+			<script type="text/javascript">
+				jQuery(document).ready(function($) {
+					$('#mce-reset-css').on('click', function(e) {
+						e.preventDefault();
+						
+						// 1. Pedir confirmación
+						if ( ! confirm('<?php echo esc_js( __( '¿Estás seguro de que quieres borrar tus estilos personalizados y volver a la plantilla por defecto? Perderás tus cambios no guardados.', 'mi-conexion-externa' ) ); ?>') ) {
+							return;
+						}
+
+						// 2. Obtener la plantilla oculta
+						var defaultTemplate = $('#mce-default-css-template').val();
+						
+						// 3. Ponerla en el editor principal
+						$('#mce_custom_css').val(defaultTemplate);
+						
+						alert('<?php echo esc_js( __( 'Estilos restablecidos. Haz clic en "Guardar Cambios" para confirmar.', 'mi-conexion-externa' ) ); ?>');
+					});
+				});
+			</script>
 		</div>
 		<?php
 	}
