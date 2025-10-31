@@ -43,13 +43,12 @@ add_action( 'init', 'mce_register_shortcodes' );
 /**
  * 3. LA LÓGICA DE RENDERIZADO DEL SHORTCODE
  *
- * *** ¡REFRACTORIZADO PARA PAGINACIÓN! ***
+ * *** ¡CORREGIDO EL BUG DE PAGINACIÓN! ***
  */
 function mce_render_tabla_shortcode( $atts ) {
 
 	// 1. Validar el atributo OBLIGATORIO 'tabla'.
 	if ( empty( $atts['tabla'] ) ) {
-		// *** ¡LÍNEA CORREGIDA! *** Se eliminó la 'J'
 		return '<p style="color:red;">' . esc_html( __( 'Error del Plugin [MCE]: Falta el atributo "tabla" en el shortcode. Ej: [mce_mostrar_tabla tabla="su_tabla"]', 'mi-conexion-externa' ) ) . '</p>';
 	}
 
@@ -186,10 +185,15 @@ function mce_render_tabla_shortcode( $atts ) {
 	if ( $total_paginas > 1 ) {
 		
 		echo '<div class="mce-pagination">';
+		
+		// *** ¡LÓGICA DE PAGINACIÓN CORREGIDA! ***
+		// Esta forma es más robusta y maneja los query args correctamente.
 		echo paginate_links(
 			array(
-				'base'      => get_permalink() . '%_%',
-				'format'    => '?pagina_mce=%#%',
+				// 'base' => add_query_arg( 'pagina_mce', '%#%' ), // Esta es la forma simple y correcta.
+				// Forma más robusta:
+				'base'      => str_replace( PHP_INT_MAX, '%#%', esc_url( add_query_arg( 'pagina_mce', PHP_INT_MAX ) ) ),
+				'format'    => '', // Ya no se necesita
 				'current'   => $pagina_actual,
 				'total'     => $total_paginas,
 				'prev_text' => __( '&laquo; Anterior', 'mi-conexion-externa' ),
