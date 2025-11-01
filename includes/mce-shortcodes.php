@@ -11,23 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * 1. REGISTRAR LOS ESTILOS
- * (Sin cambios)
- */
-function mce_register_public_styles() {
-	wp_register_style(
-		'mce-public-style',
-		MCE_PLUGIN_URL . 'public/css/mce-public-style.css',
-		array(),
-		MCE_VERSION
-	);
-}
-add_action( 'wp_enqueue_scripts', 'mce_register_public_styles' );
-
-
-/**
- * 2. REGISTRAR EL SHORTCODE
- * (Sin cambios)
+ * 1. REGISTRAR EL SHORTCODE
+ * (Se movió el registro de CSS al archivo principal)
  */
 function mce_register_shortcodes() {
 	remove_shortcode( 'mostrar_mce_productos' );
@@ -41,9 +26,9 @@ add_action( 'init', 'mce_register_shortcodes' );
 
 
 /**
- * 3. LA LÓGICA DE RENDERIZADO DEL SHORTCODE
+ * 2. LA LÓGICA DE RENDERIZADO DEL SHORTCODE
  *
- * *** ¡CORREGIDO EL BUG DE PAGINACIÓN! ***
+ * *** ¡CON BUG DE PAGINACIÓN CORREGIDO! ***
  */
 function mce_render_tabla_shortcode( $atts ) {
 
@@ -190,8 +175,6 @@ function mce_render_tabla_shortcode( $atts ) {
 		// Esta forma es más robusta y maneja los query args correctamente.
 		echo paginate_links(
 			array(
-				// 'base' => add_query_arg( 'pagina_mce', '%#%' ), // Esta es la forma simple y correcta.
-				// Forma más robusta:
 				'base'      => str_replace( PHP_INT_MAX, '%#%', esc_url( add_query_arg( 'pagina_mce', PHP_INT_MAX ) ) ),
 				'format'    => '', // Ya no se necesita
 				'current'   => $pagina_actual,

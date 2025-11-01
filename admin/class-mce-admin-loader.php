@@ -14,6 +14,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Clase MCE_Admin_Loader
  *
  * Instancia las otras clases de Admin y registra el menú.
+ *
+ * *** ¡REFRACTORIZADO! ***
+ * Esta clase ahora recibe sus dependencias (las páginas)
+ * en el constructor para evitar errores de carga.
  */
 class MCE_Admin_Loader {
 
@@ -24,26 +28,26 @@ class MCE_Admin_Loader {
 
 	/**
 	 * Constructor. Carga las dependencias y se engancha.
+	 *
+	 * @param MCE_Query_Page    $query_page
+	 * @param MCE_Settings_Page $settings_page
+	 * @param MCE_Help_Page     $help_page
+	 * @param MCE_CSS_Page      $css_page
 	 */
-	public function __construct() {
-		// 1. Cargar los archivos de clases
-		require_once MCE_PLUGIN_DIR . 'admin/class-mce-settings-page.php';
-		require_once MCE_PLUGIN_DIR . 'admin/class-mce-query-page.php';
-		require_once MCE_PLUGIN_DIR . 'admin/class-mce-help-page.php';
-		require_once MCE_PLUGIN_DIR . 'admin/class-mce-css-page.php'; // Esta línea necesita el archivo de la Acción 1
+	public function __construct( $query_page, $settings_page, $help_page, $css_page ) {
+		// 1. Guardar las dependencias (ya no las carga)
+		$this->query_page    = $query_page;
+		$this->settings_page = $settings_page;
+		$this->help_page     = $help_page;
+		$this->css_page      = $css_page;
 
-		// 2. Instanciar las clases
-		$this->settings_page = new MCE_Settings_Page();
-		$this->query_page    = new MCE_Query_Page();
-		$this->help_page     = new MCE_Help_Page();
-		$this->css_page      = new MCE_CSS_Page();
-
-		// 3. Engancharse al hook del menú
+		// 2. Engancharse al hook del menú
 		add_action( 'admin_menu', array( $this, 'register_admin_pages' ) );
 	}
 
 	/**
 	 * Registra todas las páginas del menú del plugin.
+	 * (El código aquí es el mismo, pero usa las propiedades $this->...)
 	 */
 	public function register_admin_pages() {
 		// 1. Añadir el Menú de Nivel Superior
@@ -83,7 +87,7 @@ class MCE_Admin_Loader {
 			__( 'Estilos CSS', 'mi-conexion-externa' ),
 			__( 'Estilos CSS', 'mi-conexion-externa' ),
 			'manage_options',
-			'mce-css', // Slug único
+			'mce-css',
 			array( $this->css_page, 'render_page_content' )
 		);
 
