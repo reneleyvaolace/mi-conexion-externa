@@ -37,7 +37,7 @@ register_activation_hook( MCE_PLUGIN_FILE, 'mce_plugin_activate' );
  */
 function mce_plugin_deactivate() {
 }
-register_activation_hook( MCE_PLUGIN_FILE, 'mce_plugin_deactivate' );
+register_deactivation_hook( MCE_PLUGIN_FILE, 'mce_plugin_deactivate' );
 
 /**
  * Carga del núcleo del Plugin.
@@ -64,11 +64,12 @@ function mce_load_plugin_core() {
 	// 3. Cargamos la integración de Elementor Pro (condicional)
 	add_action( 'plugins_loaded', 'mce_load_elementor_pro_integration', 11 );
 	
-	// 4. Enganchamos la función que imprime el CSS personalizado en el <head>
-	add_action( 'wp_head', 'mce_output_custom_css', 99 );
+	// 4. *** ¡LÍNEA CORREGIDA PARA ASEGURAR PRIORIDAD! ***
+	// Enganchamos la función que imprime el CSS personalizado al final del footer.
+	// Esto asegura que se cargue DESPUÉS de cualquier otro CSS.
+	add_action( 'wp_footer', 'mce_output_custom_css_in_footer', 999 );
 
-	// 5. *** ¡LÍNEA FALTANTE AÑADIDA! ***
-	// Registramos los estilos del frontend (nuestro CSS por defecto).
+	// 5. Registramos los estilos del frontend (nuestro CSS por defecto).
 	add_action( 'wp_enqueue_scripts', 'mce_register_public_styles_global' );
 }
 add_action( 'plugins_loaded', 'mce_load_plugin_core' );
@@ -89,23 +90,22 @@ function mce_load_elementor_pro_integration() {
 }
 
 /**
- * Imprime el CSS guardado en la BBDD dentro del <head> del sitio.
+ * *** ¡FUNCIÓN MODIFICADA PARA MÁXIMA PRIORIDAD! ***
+ * Imprime el CSS guardado en la BBDD dentro del footer.
+ * Esto asegura que se cargue después de cualquier otro CSS y pueda sobrescribir.
  */
-function mce_output_custom_css() {
+function mce_output_custom_css_in_footer() {
 	$custom_css = get_option( 'mce_custom_css' );
 
 	if ( ! empty( $custom_css ) ) {
-		$sanitized_css = wp_strip_all_tags( $custom_css );
-		
-		echo '' . "\n";
-		echo '<style type="text/css" id="mce-custom-styles">' . "\n";
-		echo $sanitized_css;
+		// La sanitización ya se hace al guardar.
+		echo '<style type="text/css" id="mce-custom-styles-footer">' . "\n";
+		echo $custom_css; // Imprimimos el CSS tal cual, asumiendo que ya está sanitizado.
 		echo "\n" . '</style>' . "\n";
 	}
 }
 
 /**
- * *** ¡FUNCIÓN FALTANTE AÑADIDA! ***
  * Registra nuestro archivo CSS por defecto para que
  * el shortcode pueda llamarlo con wp_enqueue_style().
  */
