@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       Mi Conexión a BD Externa
  * Plugin URI:        https://tu-sitio-web.com/
- * Description:       Provee una función global para conectarse a una base de datos externa y se integra con Elementor.
- * Version:           1.0.1
+ * Description:       Provee una función global para conectarse a una base de datos externa y un shortcode para mostrar datos.
+ * Version:           1.1.0
  * Author:            Tu Nombre (René Leyva)
  * Author URI:        https://tu-sitio-web.com/
  * License:           GPL v2 or later
@@ -22,31 +22,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  * ===================================================================
  */
 
-/**
- * Función para establecer y retornar la conexión a la BD externa.
- *
- * Utilizamos una variable estática (static) para que la conexión
- * se cree solo una vez por cada carga de página, no cada vez
- * que llamamos a la función.
- *
- * @return wpdb|null La instancia de conexión a la base de datos externa o null si falla.
- */
 function get_external_db_connection() {
-    
-    // La variable estática $external_db persiste durante la ejecución
     static $external_db = null;
 
-    // Si la conexión ya existe, simplemente la retornamos.
     if ( $external_db !== null ) {
         return $external_db;
     }
 
-    // Si no existe, creamos la nueva instancia de wpdb
-    // Usamos las constantes que definimos en wp-config.php
     try {
-        // Asegurarnos de que las constantes existen antes de usarlas
         if ( ! defined('EXT_DB_USER') || ! defined('EXT_DB_PASSWORD') || ! defined('EXT_DB_NAME') || ! defined('EXT_DB_HOST') ) {
-            // error_log('Error de Plugin: Faltan las constantes de BD externa en wp-config.php');
             return null;
         }
 
@@ -57,15 +41,11 @@ function get_external_db_connection() {
             EXT_DB_HOST 
         );
         
-        // Manejar errores de conexión iniciales
         if ( ! empty( $external_db->error ) ) {
-            // error_log('Error al conectar a la BD externa: ' . $external_db->error->get_error_message());
-            return null; // Retornamos null para indicar fallo
+            return null;
         }
 
     } catch ( Exception $e ) {
-        // Capturar cualquier excepción durante la instanciación
-        // error_log('Excepción al conectar a BD externa: ' . $e->getMessage());
         return null;
     }
 
@@ -79,33 +59,90 @@ function get_external_db_connection() {
  * ===================================================================
  */
 
-/**
- * Carga los archivos de integración de Elementor Pro.
- * Esta función es la que se mencionaba en tu error (línea 81).
- */
 function mce_load_elementor_pro_integration() {
-    
-    // Este es el archivo que estaba causando el error fatal
-    // porque se cargaba demasiado pronto.
     $integration_file = plugin_dir_path( __FILE__ ) . 'includes/class-mce-elementor-integration.php';
 
     if ( file_exists( $integration_file ) ) {
         require_once $integration_file;
     }
 }
+add_action( 'elementor/loaded', 'mce_load_elementor_pro_integration' );
+
 
 /**
- * Enganchamos nuestra función de carga al hook correcto.
- *
- * ------------------------------------------------------------------
- * ESTA ES LA CORRECCIÓN:
- * ------------------------------------------------------------------
- *
- * ANTES (EL ERROR):
- * add_action( 'plugins_loaded', 'mce_load_elementor_pro_integration' );
- *
- * AHORA (LA SOLUCIÓN):
- * Usamos 'elementor/loaded' que se dispara DESPUÉS de que Elementor
- * y Elementor Pro han cargado todas sus clases base.
+ * ===================================================================
+ * PASO 3 (NUEVO): SHORTCODE PARA MOSTRAR DATOS EXTERNOS
+ * ===================================================================
  */
-add_action( 'elementor/loaded', 'mce_load_elementor_pro_integration' );
+
+/**
+ * Función que genera el contenido del shortcode [mostrar_datos_externos].
+ *
+ * @return string El HTML con los datos de la tabla.
+ */
+function mce_display_external_data_shortcode() {
+    
+    // 1. Obtener la conexión a la BD externa
+    $external_db = get_external_db_connection();
+
+    // Usamos 'ob_start' para capturar todo el HTML que sigue
+    // en lugar de imprimirlo (echo). Los shortcodes deben retornar (return)
+    // el contenido, no imprimirlo.
+    ob_start();
+
+    // 2. Verificar que la conexión fue exitosa
+    if ( $external_db ) {
+
+        // -----------------------------------------------------------------
+        // IMPORTANTE: Modifica esta consulta
+        // -----------------------------------------------------------------
+        $nombre_tabla = 'tu_tabla_externa'; // <-- CAMBIA ESTO
+        $query = $external_db->prepare( "SELECT * FROM {$nombre_tabla} LIMIT %d", 10 );
+
+        // 3. Ejecutar la consulta
+        $resultados = $external_db->get_results( $query );
+
+        // 4. Verificar si obtuvimos resultados
+        if ( ! empty( $resultados ) ) {
+            
+            echo '<p>Mostrando los primeros 10 resultados de la tabla: ' . esc_html( $nombre_tabla ) . '</p>';
+
+            echo '<table class="tabla-externa" border="1" cellpadding="5" cellspacing="0">';
+            
+            $columnas = array_keys( (array) $resultados[0] );
+
+            echo '<thead><tr>';
+            foreach ( $columnas as $columna ) {
+                echo '<th>' . esc_html( $columna ) . '</th>';
+            }
+            echo '</tr></thead>';
+
+            echo '<tbody>';
+            foreach ( $resultados as $fila ) {
+                echo '<tr>';
+                foreach ( $columnas as $columna ) {
+                    echo '<td>' . esc_html( $fila->$columna ) . '</td>';
+                }
+                echo '</tr>';
+            }
+            echo '</tbody>';
+            echo '</table>';
+
+        } else {
+            echo '<p>No se encontraron resultados en la tabla: ' . esc_html( $nombre_tabla ) . '</p>';
+        }
+
+    } else {
+        echo '<p><strong>Error:</strong> No se pudo establecer la conexión con la base de datos externa.</p>';
+    }
+
+    // ob_get_clean() detiene la captura y nos devuelve
+    // todo el HTML generado como un string.
+    return ob_get_clean();
+}
+
+/**
+ * Registramos el shortcode en WordPress.
+ * Ahora, donde escribamos [mostrar_datos_externos], se ejecutará la función.
+ */
+add_shortcode( 'mostrar_datos_externos', 'mce_display_external_data_shortcode' );
