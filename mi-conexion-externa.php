@@ -64,38 +64,32 @@ function mce_load_plugin_core() {
 	// 3. Cargamos la integración de Elementor Pro (condicional)
 	add_action( 'plugins_loaded', 'mce_load_elementor_pro_integration', 11 );
 	
-	// 4. *** ¡LÍNEA CORREGIDA! ***
-	// Enganchamos la función que imprime el CSS personalizado en el <head>
-	// con una prioridad tardía (99) para que sobreescriba a los demás.
+	// 4. Enganchamos la función que imprime el CSS personalizado en el <head>
 	add_action( 'wp_head', 'mce_output_custom_css', 99 );
+
+	// 5. *** ¡LÍNEA FALTANTE AÑADIDA! ***
+	// Registramos los estilos del frontend (nuestro CSS por defecto).
+	add_action( 'wp_enqueue_scripts', 'mce_register_public_styles_global' );
 }
 add_action( 'plugins_loaded', 'mce_load_plugin_core' );
 
 
 /**
  * Función de carga condicional para la integración de Elementor Pro.
- * (Corregida para evitar el error fatal)
  */
 function mce_load_elementor_pro_integration() {
-	
-	// Comprobación 1: ¿Está definido el plugin Pro?
 	if ( ! defined( 'ELEMENTOR_PRO_VERSION' ) ) {
 		return;
 	}
-
-	// Comprobación 2: ¿Existe la clase que necesitamos extender?
 	if ( ! class_exists( 'ElementorPro\Modules\QueryControl\Classes\Base_Query' ) ) {
 		return;
 	}
-
-	// Si llegamos aquí, ES SEGURO cargar nuestro archivo.
 	require_once MCE_PLUGIN_DIR . 'includes/class-mce-elementor-integration.php';
 	new MCE_Elementor_Integration();
 }
 
 /**
  * Imprime el CSS guardado en la BBDD dentro del <head> del sitio.
- * (Corregido el typo en <style>)
  */
 function mce_output_custom_css() {
 	$custom_css = get_option( 'mce_custom_css' );
@@ -108,4 +102,18 @@ function mce_output_custom_css() {
 		echo $sanitized_css;
 		echo "\n" . '</style>' . "\n";
 	}
+}
+
+/**
+ * *** ¡FUNCIÓN FALTANTE AÑADIDA! ***
+ * Registra nuestro archivo CSS por defecto para que
+ * el shortcode pueda llamarlo con wp_enqueue_style().
+ */
+function mce_register_public_styles_global() {
+	wp_register_style(
+		'mce-public-style', // El "nombre" de nuestro estilo.
+		MCE_PLUGIN_URL . 'public/css/mce-public-style.css',
+		array(), // Dependencias (ninguna)
+		MCE_VERSION // Versión
+	);
 }
