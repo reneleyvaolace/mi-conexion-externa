@@ -58,8 +58,6 @@ class MCE_CSS_Page {
 	 * @return string El CSS sanitizado.
 	 */
 	public function sanitize_css( $input ) {
-		// wp_strip_all_tags es una sanitización segura.
-		// Elimina <script> y <style>, pero preserva el CSS.
 		return wp_strip_all_tags( $input );
 	}
 
@@ -212,15 +210,11 @@ CSS;
 					$('#mce-reset-css').on('click', function(e) {
 						e.preventDefault();
 						
-						// 1. Pedir confirmación
 						if ( ! confirm('<?php echo esc_js( __( '¿Estás seguro de que quieres borrar tus estilos personalizados y volver a la plantilla por defecto? Perderás tus cambios no guardados.', 'mi-conexion-externa' ) ); ?>') ) {
 							return;
 						}
 
-						// 2. Obtener la plantilla oculta
 						var defaultTemplate = $('#mce-default-css-template').val();
-						
-						// 3. Ponerla en el editor principal
 						$('#mce_custom_css').val(defaultTemplate);
 						
 						alert('<?php echo esc_js( __( 'Estilos restablecidos. Haz clic en "Guardar Cambios" para confirmar.', 'mi-conexion-externa' ) ); ?>');

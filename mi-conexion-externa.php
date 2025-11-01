@@ -1,148 +1,109 @@
 <?php
 /**
- * Plugin Name:       Mi Conexión a BD Externa
- * Plugin URI:        https://tu-sitio-web.com/
- * Description:       Provee una función global para conectarse a una base de datos externa y un shortcode para mostrar datos.
- * Version:           1.1.0
- * Author:            Tu Nombre (René Leyva)
- * Author URI:        https://tu-sitio-web.com/
+ * Plugin Name:       Mi Conexión Externa
+ * Plugin URI:        https://ejemplo.com/mi-conexion-externa
+ * Description:       Conecta WordPress con una base de datos externa para sincronizar contenido.
+ * Version:           1.0.0
+ * Author:            Tu Nombre Aquí
+ * Author URI:        https://ejemplo.com
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       mi-conexion-externa
+ * Domain Path:       /languages
  */
 
-// Evitar que el archivo sea accedido directamente
+// Regla 1: Mejor Práctica de Seguridad. Evitar acceso directo.
 if ( ! defined( 'ABSPATH' ) ) {
-    exit;
+	exit; // Salir si se accede directamente.
 }
 
 /**
- * ===================================================================
- * PASO 1: FUNCIÓN DE CONEXIÓN A LA BASE DE DATOS EXTERNA
- * ===================================================================
+ * Definición de Constantes del Plugin
  */
+define( 'MCE_VERSION', '1.0.0' );
+define( 'MCE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'MCE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+define( 'MCE_PLUGIN_FILE', __FILE__ );
 
-function get_external_db_connection() {
-    static $external_db = null;
-
-    if ( $external_db !== null ) {
-        return $external_db;
-    }
-
-    try {
-        if ( ! defined('EXT_DB_USER') || ! defined('EXT_DB_PASSWORD') || ! defined('EXT_DB_NAME') || ! defined('EXT_DB_HOST') ) {
-            return null;
-        }
-
-        $external_db = new wpdb( 
-            EXT_DB_USER, 
-            EXT_DB_PASSWORD, 
-            EXT_DB_NAME, 
-            EXT_DB_HOST 
-        );
-        
-        if ( ! empty( $external_db->error ) ) {
-            return null;
-        }
-
-    } catch ( Exception $e ) {
-        return null;
-    }
-
-    return $external_db;
+/**
+ * Hook de Activación del Plugin.
+ */
+function mce_plugin_activate() {
 }
+register_activation_hook( MCE_PLUGIN_FILE, 'mce_plugin_activate' );
+
+/**
+ * Hook de Desactivación del Plugin.
+ */
+function mce_plugin_deactivate() {
+}
+register_deactivation_hook( MCE_PLUGIN_FILE, 'mce_plugin_deactivate' );
+
+/**
+ * Carga del núcleo del Plugin.
+ */
+function mce_load_plugin_core() {
+
+	// Cargar el dominio de texto para traducciones
+	load_plugin_textdomain(
+		'mi-conexion-externa',
+		false,
+		dirname( plugin_basename( MCE_PLUGIN_FILE ) ) . '/languages/'
+	);
+
+	// --- 1. Cargamos los archivos de clases GLOBALES ---
+	require_once MCE_PLUGIN_DIR . 'includes/class-mce-db-handler.php';
+	require_once MCE_PLUGIN_DIR . 'includes/mce-shortcodes.php';
+
+	// --- 2. Cargamos el núcleo del ADMIN ---
+	if ( is_admin() ) {
+		require_once MCE_PLUGIN_DIR . 'admin/class-mce-admin-loader.php';
+		new MCE_Admin_Loader();
+	}
+	
+	// 3. Cargamos la integración de Elementor Pro (condicional)
+	add_action( 'plugins_loaded', 'mce_load_elementor_pro_integration', 11 );
+	
+	// 4. Enganchamos la función que imprime el CSS personalizado en el <head>
+	add_action( 'wp_head', 'mce_output_custom_css', 99 );
+}
+add_action( 'plugins_loaded', 'mce_load_plugin_core' );
 
 
 /**
- * ===================================================================
- * PASO 2: INTEGRACIÓN CON ELEMENTOR PRO (SECCIÓN CORREGIDA)
- * ===================================================================
+ * *** ¡FUNCIÓN CORREGIDA Y MÁS ROBUSTA! ***
+ * Función de carga condicional para la integración de Elementor Pro.
  */
-
 function mce_load_elementor_pro_integration() {
-    $integration_file = plugin_dir_path( __FILE__ ) . 'includes/class-mce-elementor-integration.php';
+	
+	// Comprobación 1: ¿Está definido el plugin Pro?
+	if ( ! defined( 'ELEMENTOR_PRO_VERSION' ) ) {
+		return; // No, salir silenciosamente.
+	}
 
-    if ( file_exists( $integration_file ) ) {
-        require_once $integration_file;
-    }
-}
-add_action( 'elementor/loaded', 'mce_load_elementor_pro_integration' );
+	// Comprobación 2 (La más importante): ¿Existe la clase que necesitamos extender?
+	// Si Elementor Pro no está "Conectado y Activado", esta clase no existirá.
+	if ( ! class_exists( 'ElementorPro\Modules\QueryControl\Classes\Base_Query' ) ) {
+		return; // No, salir silenciosamente.
+	}
 
-
-/**
- * ===================================================================
- * PASO 3 (NUEVO): SHORTCODE PARA MOSTRAR DATOS EXTERNOS
- * ===================================================================
- */
-
-/**
- * Función que genera el contenido del shortcode [mostrar_datos_externos].
- *
- * @return string El HTML con los datos de la tabla.
- */
-function mce_display_external_data_shortcode() {
-    
-    // 1. Obtener la conexión a la BD externa
-    $external_db = get_external_db_connection();
-
-    // Usamos 'ob_start' para capturar todo el HTML que sigue
-    // en lugar de imprimirlo (echo). Los shortcodes deben retornar (return)
-    // el contenido, no imprimirlo.
-    ob_start();
-
-    // 2. Verificar que la conexión fue exitosa
-    if ( $external_db ) {
-
-        // -----------------------------------------------------------------
-        // IMPORTANTE: Modifica esta consulta
-        // -----------------------------------------------------------------
-        $nombre_tabla = 'tu_tabla_externa'; // <-- CAMBIA ESTO
-        $query = $external_db->prepare( "SELECT * FROM {$nombre_tabla} LIMIT %d", 10 );
-
-        // 3. Ejecutar la consulta
-        $resultados = $external_db->get_results( $query );
-
-        // 4. Verificar si obtuvimos resultados
-        if ( ! empty( $resultados ) ) {
-            
-            echo '<p>Mostrando los primeros 10 resultados de la tabla: ' . esc_html( $nombre_tabla ) . '</p>';
-
-            echo '<table class="tabla-externa" border="1" cellpadding="5" cellspacing="0">';
-            
-            $columnas = array_keys( (array) $resultados[0] );
-
-            echo '<thead><tr>';
-            foreach ( $columnas as $columna ) {
-                echo '<th>' . esc_html( $columna ) . '</th>';
-            }
-            echo '</tr></thead>';
-
-            echo '<tbody>';
-            foreach ( $resultados as $fila ) {
-                echo '<tr>';
-                foreach ( $columnas as $columna ) {
-                    echo '<td>' . esc_html( $fila->$columna ) . '</td>';
-                }
-                echo '</tr>';
-            }
-            echo '</tbody>';
-            echo '</table>';
-
-        } else {
-            echo '<p>No se encontraron resultados en la tabla: ' . esc_html( $nombre_tabla ) . '</p>';
-        }
-
-    } else {
-        echo '<p><strong>Error:</strong> No se pudo establecer la conexión con la base de datos externa.</p>';
-    }
-
-    // ob_get_clean() detiene la captura y nos devuelve
-    // todo el HTML generado como un string.
-    return ob_get_clean();
+	// Si llegamos aquí, ES SEGURO cargar nuestro archivo.
+	require_once MCE_PLUGIN_DIR . 'includes/class-mce-elementor-integration.php';
+	new MCE_Elementor_Integration();
 }
 
 /**
- * Registramos el shortcode en WordPress.
- * Ahora, donde escribamos [mostrar_datos_externos], se ejecutará la función.
+ * Imprime el CSS guardado en la BBDD dentro del <head> del sitio.
  */
-add_shortcode( 'mostrar_datos_externos', 'mce_display_external_data_shortcode' );
+function mce_output_custom_css() {
+	$custom_css = get_option( 'mce_custom_css' );
+
+	if ( ! empty( $custom_css ) ) {
+		$sanitized_css = wp_strip_all_tags( $custom_css );
+		
+		echo '' . "\n";
+		echo '<style type="text/css" id="mce-custom-styles">' . "\n";
+		echo $sanitized_css;
+		echo "\n" . '</style>' . "\n";
+	}
+}
