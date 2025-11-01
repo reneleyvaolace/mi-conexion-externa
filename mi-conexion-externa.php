@@ -1,103 +1,111 @@
 <?php
 /**
- * Plugin Name:       Mi Conexión Externa
- * Plugin URI:        https://ejemplo.com/mi-conexion-externa
- * Description:       Conecta WordPress con una base de datos externa para sincronizar contenido.
- * Version:           1.0.0
- * Author:            Tu Nombre Aquí
- * Author URI:        https://ejemplo.com
+ * Plugin Name:       Mi Conexión a BD Externa
+ * Plugin URI:        https://tu-sitio-web.com/
+ * Description:       Provee una función global para conectarse a una base de datos externa y se integra con Elementor.
+ * Version:           1.0.1
+ * Author:            Tu Nombre (René Leyva)
+ * Author URI:        https://tu-sitio-web.com/
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       mi-conexion-externa
- * Domain Path:       /languages
  */
 
-// Regla 1: Mejor Práctica de Seguridad. Evitar acceso directo.
+// Evitar que el archivo sea accedido directamente
 if ( ! defined( 'ABSPATH' ) ) {
-	exit; // Salir si se accede directamente.
+    exit;
 }
 
 /**
- * Definición de Constantes del Plugin
+ * ===================================================================
+ * PASO 1: FUNCIÓN DE CONEXIÓN A LA BASE DE DATOS EXTERNA
+ * ===================================================================
  */
-define( 'MCE_VERSION', '1.0.0' );
-define( 'MCE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
-define( 'MCE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'MCE_PLUGIN_FILE', __FILE__ );
 
 /**
- * Hook de Activación del Plugin.
+ * Función para establecer y retornar la conexión a la BD externa.
+ *
+ * Utilizamos una variable estática (static) para que la conexión
+ * se cree solo una vez por cada carga de página, no cada vez
+ * que llamamos a la función.
+ *
+ * @return wpdb|null La instancia de conexión a la base de datos externa o null si falla.
  */
-function mce_plugin_activate() {
+function get_external_db_connection() {
+    
+    // La variable estática $external_db persiste durante la ejecución
+    static $external_db = null;
+
+    // Si la conexión ya existe, simplemente la retornamos.
+    if ( $external_db !== null ) {
+        return $external_db;
+    }
+
+    // Si no existe, creamos la nueva instancia de wpdb
+    // Usamos las constantes que definimos en wp-config.php
+    try {
+        // Asegurarnos de que las constantes existen antes de usarlas
+        if ( ! defined('EXT_DB_USER') || ! defined('EXT_DB_PASSWORD') || ! defined('EXT_DB_NAME') || ! defined('EXT_DB_HOST') ) {
+            // error_log('Error de Plugin: Faltan las constantes de BD externa en wp-config.php');
+            return null;
+        }
+
+        $external_db = new wpdb( 
+            EXT_DB_USER, 
+            EXT_DB_PASSWORD, 
+            EXT_DB_NAME, 
+            EXT_DB_HOST 
+        );
+        
+        // Manejar errores de conexión iniciales
+        if ( ! empty( $external_db->error ) ) {
+            // error_log('Error al conectar a la BD externa: ' . $external_db->error->get_error_message());
+            return null; // Retornamos null para indicar fallo
+        }
+
+    } catch ( Exception $e ) {
+        // Capturar cualquier excepción durante la instanciación
+        // error_log('Excepción al conectar a BD externa: ' . $e->getMessage());
+        return null;
+    }
+
+    return $external_db;
 }
-register_activation_hook( MCE_PLUGIN_FILE, 'mce_plugin_activate' );
+
 
 /**
- * Hook de Desactivación del Plugin.
+ * ===================================================================
+ * PASO 2: INTEGRACIÓN CON ELEMENTOR PRO (SECCIÓN CORREGIDA)
+ * ===================================================================
  */
-function mce_plugin_deactivate() {
-}
-register_deactivation_hook( MCE_PLUGIN_FILE, 'mce_plugin_deactivate' );
 
 /**
- * Carga del núcleo del Plugin.
- */
-function mce_load_plugin_core() {
-
-	// Cargar el dominio de texto para traducciones
-	load_plugin_textdomain(
-		'mi-conexion-externa',
-		false,
-		dirname( plugin_basename( MCE_PLUGIN_FILE ) ) . '/languages/'
-	);
-
-	// --- 1. Cargamos los archivos de clases GLOBALES ---
-	require_once MCE_PLUGIN_DIR . 'includes/class-mce-db-handler.php';
-	require_once MCE_PLUGIN_DIR . 'includes/mce-shortcodes.php';
-
-	// --- 2. Cargamos el núcleo del ADMIN ---
-	if ( is_admin() ) {
-		require_once MCE_PLUGIN_DIR . 'admin/class-mce-admin-loader.php';
-		new MCE_Admin_Loader();
-	}
-	
-	// 3. Cargamos la integración de Elementor Pro (condicional)
-	add_action( 'plugins_loaded', 'mce_load_elementor_pro_integration', 11 );
-	
-	// 4. *** ¡LÍNEA CORREGIDA! ***
-	// Enganchamos la función que imprime el CSS personalizado en el <head>
-	// con una prioridad tardía (99) para que sobreescriba a los demás.
-	add_action( 'wp_head', 'mce_output_custom_css', 99 );
-}
-add_action( 'plugins_loaded', 'mce_load_plugin_core' );
-
-
-/**
- * Función de carga condicional para la integración de Elementor Pro.
- * (Sin cambios)
+ * Carga los archivos de integración de Elementor Pro.
+ * Esta función es la que se mencionaba en tu error (línea 81).
  */
 function mce_load_elementor_pro_integration() {
-	if ( defined( 'ELEMENTOR_PRO_VERSION' ) ) {
-		require_once MCE_PLUGIN_DIR . 'includes/class-mce-elementor-integration.php';
-		new MCE_Elementor_Integration();
-	}
+    
+    // Este es el archivo que estaba causando el error fatal
+    // porque se cargaba demasiado pronto.
+    $integration_file = plugin_dir_path( __FILE__ ) . 'includes/class-mce-elementor-integration.php';
+
+    if ( file_exists( $integration_file ) ) {
+        require_once $integration_file;
+    }
 }
 
 /**
- * Imprime el CSS guardado en la BBDD dentro del <head> del sitio.
- * (Función sin cambios, el error estaba en el add_action de arriba)
+ * Enganchamos nuestra función de carga al hook correcto.
+ *
+ * ------------------------------------------------------------------
+ * ESTA ES LA CORRECCIÓN:
+ * ------------------------------------------------------------------
+ *
+ * ANTES (EL ERROR):
+ * add_action( 'plugins_loaded', 'mce_load_elementor_pro_integration' );
+ *
+ * AHORA (LA SOLUCIÓN):
+ * Usamos 'elementor/loaded' que se dispara DESPUÉS de que Elementor
+ * y Elementor Pro han cargado todas sus clases base.
  */
-function mce_output_custom_css() {
-	// 1. Obtener el CSS guardado de la base de datos
-	$custom_css = get_option( 'mce_custom_css' );
-
-	// 2. Si no está vacío, sanitizarlo e imprimirlo
-	if ( ! empty( $custom_css ) ) {
-		$sanitized_css = wp_strip_all_tags( $custom_css );
-		
-		echo '' . "\n";
-		echo '<style type="text/css" id="mce-custom-styles">' . "\n";
-		echo $sanitized_css;
-		echo "\n" . '</style>' . "\n";
-	}
-}
+add_action( 'elementor/loaded', 'mce_load_elementor_pro_integration' );
