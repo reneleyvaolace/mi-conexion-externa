@@ -37,7 +37,7 @@ register_activation_hook( MCE_PLUGIN_FILE, 'mce_plugin_activate' );
  */
 function mce_plugin_deactivate() {
 }
-register_deactivation_hook( MCE_PLUGIN_FILE, 'mce_plugin_deactivate' );
+register_activation_hook( MCE_PLUGIN_FILE, 'mce_plugin_deactivate' );
 
 /**
  * Carga del núcleo del Plugin.
@@ -64,27 +64,28 @@ function mce_load_plugin_core() {
 	// 3. Cargamos la integración de Elementor Pro (condicional)
 	add_action( 'plugins_loaded', 'mce_load_elementor_pro_integration', 11 );
 	
-	// 4. Enganchamos la función que imprime el CSS personalizado en el <head>
+	// 4. *** ¡LÍNEA CORREGIDA! ***
+	// Enganchamos la función que imprime el CSS personalizado en el <head>
+	// con una prioridad tardía (99) para que sobreescriba a los demás.
 	add_action( 'wp_head', 'mce_output_custom_css', 99 );
 }
 add_action( 'plugins_loaded', 'mce_load_plugin_core' );
 
 
 /**
- * *** ¡FUNCIÓN CORREGIDA Y MÁS ROBUSTA! ***
  * Función de carga condicional para la integración de Elementor Pro.
+ * (Corregida para evitar el error fatal)
  */
 function mce_load_elementor_pro_integration() {
 	
 	// Comprobación 1: ¿Está definido el plugin Pro?
 	if ( ! defined( 'ELEMENTOR_PRO_VERSION' ) ) {
-		return; // No, salir silenciosamente.
+		return;
 	}
 
-	// Comprobación 2 (La más importante): ¿Existe la clase que necesitamos extender?
-	// Si Elementor Pro no está "Conectado y Activado", esta clase no existirá.
+	// Comprobación 2: ¿Existe la clase que necesitamos extender?
 	if ( ! class_exists( 'ElementorPro\Modules\QueryControl\Classes\Base_Query' ) ) {
-		return; // No, salir silenciosamente.
+		return;
 	}
 
 	// Si llegamos aquí, ES SEGURO cargar nuestro archivo.
@@ -94,6 +95,7 @@ function mce_load_elementor_pro_integration() {
 
 /**
  * Imprime el CSS guardado en la BBDD dentro del <head> del sitio.
+ * (Corregido el typo en <style>)
  */
 function mce_output_custom_css() {
 	$custom_css = get_option( 'mce_custom_css' );
