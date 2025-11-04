@@ -27,7 +27,7 @@
 	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
-/* 3. Título de la Tarjeta (llave_titulo) */
+/* 3. Título de la Tarjeta (definido en "llave_titulo") */
 .mce-producto-card .mce-card-title {
 	font-family: var(--wp--preset--font-family--heading, sans-serif);
 	font-size: var(--wp--preset--font-size--large, 1.25rem);
@@ -94,7 +94,7 @@
 	color: var(--wp--preset--color--foreground, #000);
 }
 
-/* *** 10. ESTILOS DE PAGINACIÓN *** */
+/* 10. ESTILOS DE PAGINACIÓN */
 .mce-pagination {
 	margin-top: 30px;
 	text-align: center;
@@ -105,25 +105,23 @@
 	padding: 8px 14px;
 	margin: 0 3px;
 	text-decoration: none;
-	/* Usar colores del tema */
 	border: 1px solid var(--wp--preset--color--contrast-2, #ddd);
 	border-radius: 4px;
 	background: var(--wp--preset--color--base, #fff);
 	color: var(--wp--preset--color--primary, #0051d2);
 	transition: background 0.2s ease, color 0.2s ease;
 }
+/* *** ¡REGLA CORREGIDA! *** */
 .mce-pagination .page-numbers:hover {
 	background: var(--wp--preset--color--contrast, #f4f4f4);
-	color: var(--wp--preset--color--foreground, #111);
+	/* Se eliminó la línea "color: ... #111" que lo ponía negro */
 }
-/* Estilo para la página actual */
 .mce-pagination .page-numbers.current {
 	background: var(--wp--preset--color--primary, #0051d2);
 	color: var(--wp--preset--color--base, #fff);
 	border-color: var(--wp--preset--color--primary, #0051d2);
 	font-weight: 700;
 }
-/* Estilo para los "..." */
 .mce-pagination .page-numbers.dots {
 	border: none;
 	background: none;

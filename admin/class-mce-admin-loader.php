@@ -20,8 +20,7 @@ class MCE_Admin_Loader {
 	private $settings_page;
 	private $query_page;
 	private $help_page;
-	// private $css_page; // Eliminado
-
+	
 	/**
 	 * Constructor.
 	 */
@@ -30,7 +29,6 @@ class MCE_Admin_Loader {
 		$this->query_page    = $query_page;
 		$this->settings_page = $settings_page;
 		$this->help_page     = $help_page;
-		// $this->css_page      = $css_page; // Eliminado
 
 		// 2. Engancharse al hook del menú
 		add_action( 'admin_menu', array( $this, 'register_admin_pages' ) );

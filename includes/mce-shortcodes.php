@@ -22,7 +22,7 @@ add_action( 'init', 'mce_register_shortcodes' );
 /**
  * Lógica de renderizado del Shortcode
  *
- * *** ¡REFRACTORIZADO CON ESTILOS EN LÍNEA! ***
+ * *** ¡REFRACTORIZADO CON ESTILOS EN LÍNEA !important! ***
  */
 function mce_render_tabla_shortcode( $atts ) {
 
@@ -97,32 +97,33 @@ function mce_render_tabla_shortcode( $atts ) {
 	$total_filas = $resultado['total_rows'];
 
 	// 9. Manejar Tabla Vacía
-	if ( empty( $data ) ) {
-		// (Lógica de tabla vacía sin cambios)
+	if ( empty( $data ) && $pagina_actual === 1 ) {
+		return '<p>' . esc_html( sprintf( __( 'No se encontraron datos en la tabla "%s".', 'mi-conexion-externa' ), $tabla ) ) . '</p>';
 	}
 
-	// 10. Cargar el CSS (¡Lo seguimos necesitando para el LAYOUT!)
+	// 10. Cargar el CSS (Lo seguimos necesitando para el LAYOUT: grid, padding, etc.)
 	wp_enqueue_style( 'mce-public-style' );
 
-	// 11. Estilo en línea para columnas (sin cambios)
+	// 11. Estilo en línea para columnas
 	$inline_style = sprintf(
 		'grid-template-columns: repeat(%d, 1fr);',
 		$columnas
 	);
 
-	// 12. *** ¡NUEVO! CONSTRUIR ESTILOS EN LÍNEA ***
+	// 12. *** ¡NUEVO! CONSTRUIR ESTILOS EN LÍNEA CON !important ***
+	// Sanitizamos el valor y le añadimos !important para ganar al tema.
 	$estilo_titulo = '';
-	if ( ! empty( $a['color_titulo'] ) ) { $estilo_titulo .= 'color: ' . esc_attr( $a['color_titulo'] ) . ';'; }
-	if ( ! empty( $a['tamano_titulo'] ) ) { $estilo_titulo .= 'font-size: ' . esc_attr( $a['tamano_titulo'] ) . ';'; }
+	if ( ! empty( $a['color_titulo'] ) ) { $estilo_titulo .= 'color: ' . esc_attr( $a['color_titulo'] ) . ' !important;'; }
+	if ( ! empty( $a['tamano_titulo'] ) ) { $estilo_titulo .= 'font-size: ' . esc_attr( $a['tamano_titulo'] ) . ' !important;'; }
 
 	$estilo_etiqueta = '';
-	if ( ! empty( $a['color_etiqueta'] ) ) { $estilo_etiqueta .= 'color: ' . esc_attr( $a['color_etiqueta'] ) . ';'; }
+	if ( ! empty( $a['color_etiqueta'] ) ) { $estilo_etiqueta .= 'color: ' . esc_attr( $a['color_etiqueta'] ) . ' !important;'; }
 	
 	$estilo_valor = '';
-	if ( ! empty( $a['color_valor'] ) ) { $estilo_valor .= 'color: ' . esc_attr( $a['color_valor'] ) . ';'; }
+	if ( ! empty( $a['color_valor'] ) ) { $estilo_valor .= 'color: ' . esc_attr( $a['color_valor'] ) . ' !important;'; }
 
 	$estilo_enlace = '';
-	if ( ! empty( $a['color_enlace'] ) ) { $estilo_enlace .= 'color: ' . esc_attr( $a['color_enlace'] ) . ';'; }
+	if ( ! empty( $a['color_enlace'] ) ) { $estilo_enlace .= 'color: ' . esc_attr( $a['color_enlace'] ) . ' !important;'; }
 
 
 	// 13. Construir el HTML
@@ -134,7 +135,6 @@ function mce_render_tabla_shortcode( $atts ) {
 			<div class="mce-producto-card">
 				<?php
 				if ( ! empty( $llave_titulo ) && isset( $row[ $llave_titulo ] ) ) {
-					// *** ¡ACTUALIZADO! Se añade el style="..." ***
 					echo '<h3 class="mce-card-title" style="' . esc_attr( $estilo_titulo ) . '">' . esc_html( $row[ $llave_titulo ] ) . '</h3>';
 				}
 
