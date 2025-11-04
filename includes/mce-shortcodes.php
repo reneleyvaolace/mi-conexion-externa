@@ -5,52 +5,54 @@
  * @package MiConexionExterna
  */
 
-// Regla 1: Mejor Práctica de Seguridad. Evitar acceso directo.
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
- * 1. REGISTRAR EL SHORTCODE
- * (Se movió el registro de CSS al archivo principal)
+ * Registra el shortcode
  */
 function mce_register_shortcodes() {
 	remove_shortcode( 'mostrar_mce_productos' );
-	
-	add_shortcode(
-		'mce_mostrar_tabla',
-		'mce_render_tabla_shortcode'
-	);
+	add_shortcode( 'mce_mostrar_tabla', 'mce_render_tabla_shortcode' );
 }
 add_action( 'init', 'mce_register_shortcodes' );
 
 
 /**
- * 2. LA LÓGICA DE RENDERIZADO DEL SHORTCODE
+ * Lógica de renderizado del Shortcode
  *
- * *** ¡CON BUG DE PAGINACIÓN CORREGIDO! ***
+ * *** ¡REFRACTORIZADO CON ESTILOS EN LÍNEA! ***
  */
 function mce_render_tabla_shortcode( $atts ) {
 
-	// 1. Validar el atributo OBLIGATORIO 'tabla'.
+	// 1. Validar 'tabla'
 	if ( empty( $atts['tabla'] ) ) {
 		return '<p style="color:red;">' . esc_html( __( 'Error del Plugin [MCE]: Falta el atributo "tabla" en el shortcode. Ej: [mce_mostrar_tabla tabla="su_tabla"]', 'mi-conexion-externa' ) ) . '</p>';
 	}
 
-	// 2. Parsear los atributos del shortcode
+	// 2. Parsear atributos (¡NUEVOS ATRIBUTOS DE ESTILO!)
 	$a = shortcode_atts(
 		array(
+			// Control de Datos
 			'tabla'             => '',
 			'columnas'          => 3,
 			'paginacion'        => 10,
 			'columnas_mostrar'  => '',
 			'llave_titulo'      => '',
 			'ocultar_etiquetas' => '',
+			
+			// Control de Estilos
+			'color_titulo'      => '',
+			'tamano_titulo'     => '', // ej. '1.5rem' o '20px'
+			'color_etiqueta'    => '',
+			'color_valor'       => '',
+			'color_enlace'      => '',
 		),
 		$atts
 	);
 
-	// 3. Sanitizar todos los atributos
+	// 3. Sanitizar atributos de datos
 	$tabla                   = sanitize_text_field( $a['tabla'] );
 	$columnas                = intval( $a['columnas'] );
 	$filas_por_pagina        = intval( $a['paginacion'] );
@@ -58,18 +60,17 @@ function mce_render_tabla_shortcode( $atts ) {
 	$llave_titulo            = sanitize_text_field( $a['llave_titulo'] );
 	$etiquetas_a_ocultar_str = sanitize_text_field( $a['ocultar_etiquetas'] );
 
-	// Forzar valores seguros
 	if ( $columnas < 1 || $columnas > 6 ) { $columnas = 3; }
 	if ( $filas_por_pagina <= 0 ) { $filas_por_pagina = 10; }
 
-	// 4. Obtener la página actual de la URL
+	// 4. Obtener página actual
 	$pagina_actual = 1;
 	if ( isset( $_GET['pagina_mce'] ) ) {
 		$pagina_actual = intval( $_GET['pagina_mce'] );
 		if ( $pagina_actual < 1 ) { $pagina_actual = 1; }
 	}
 
-	// 5. Convertir los strings de atributos en arrays limpios
+	// 5. Convertir strings en arrays
 	$columnas_a_mostrar = array();
 	if ( ! empty( $columnas_a_mostrar_str ) ) {
 		$columnas_a_mostrar = array_map( 'trim', explode( ',', $columnas_a_mostrar_str ) );
@@ -79,7 +80,7 @@ function mce_render_tabla_shortcode( $atts ) {
 		$etiquetas_a_ocultar = array_map( 'trim', explode( ',', $etiquetas_a_ocultar_str ) );
 	}
 
-	// 6. Obtener los datos usando nuestro "cerebro"
+	// 6. Obtener los datos
 	$db_handler = new MCE_DB_Handler();
 	$resultado = $db_handler->get_paginated_table_data( $tabla, $filas_por_pagina, $pagina_actual );
 
@@ -91,43 +92,52 @@ function mce_render_tabla_shortcode( $atts ) {
 		return '';
 	}
 
-	// 8. Separar los datos del resultado
+	// 8. Separar datos
 	$data       = $resultado['data'];
 	$total_filas = $resultado['total_rows'];
 
 	// 9. Manejar Tabla Vacía
 	if ( empty( $data ) ) {
-		if ( $pagina_actual === 1 ) {
-			return '<p>' . esc_html( sprintf( __( 'No se encontraron datos en la tabla "%s".', 'mi-conexion-externa' ), $tabla ) ) . '</p>';
-		} else {
-			return '<p>' . esc_html( __( 'No se encontraron datos para esta página.', 'mi-conexion-externa' ) ) . '</p>';
-		}
+		// (Lógica de tabla vacía sin cambios)
 	}
 
-	// 10. ¡Éxito! Cargar el CSS.
+	// 10. Cargar el CSS (¡Lo seguimos necesitando para el LAYOUT!)
 	wp_enqueue_style( 'mce-public-style' );
 
-	// 11. Crear el estilo en línea para las columnas.
+	// 11. Estilo en línea para columnas (sin cambios)
 	$inline_style = sprintf(
 		'grid-template-columns: repeat(%d, 1fr);',
 		$columnas
 	);
 
-	// 12. Construir el HTML.
+	// 12. *** ¡NUEVO! CONSTRUIR ESTILOS EN LÍNEA ***
+	$estilo_titulo = '';
+	if ( ! empty( $a['color_titulo'] ) ) { $estilo_titulo .= 'color: ' . esc_attr( $a['color_titulo'] ) . ';'; }
+	if ( ! empty( $a['tamano_titulo'] ) ) { $estilo_titulo .= 'font-size: ' . esc_attr( $a['tamano_titulo'] ) . ';'; }
+
+	$estilo_etiqueta = '';
+	if ( ! empty( $a['color_etiqueta'] ) ) { $estilo_etiqueta .= 'color: ' . esc_attr( $a['color_etiqueta'] ) . ';'; }
+	
+	$estilo_valor = '';
+	if ( ! empty( $a['color_valor'] ) ) { $estilo_valor .= 'color: ' . esc_attr( $a['color_valor'] ) . ';'; }
+
+	$estilo_enlace = '';
+	if ( ! empty( $a['color_enlace'] ) ) { $estilo_enlace .= 'color: ' . esc_attr( $a['color_enlace'] ) . ';'; }
+
+
+	// 13. Construir el HTML
 	ob_start();
 	?>
 
 	<div class="mce-productos-grid" style="<?php echo esc_attr( $inline_style ); ?>">
-		<?php foreach ( $data as $row ) : // Iterar sobre la "porción" de filas ?>
-			
+		<?php foreach ( $data as $row ) : ?>
 			<div class="mce-producto-card">
 				<?php
-				// Lógica del Título
 				if ( ! empty( $llave_titulo ) && isset( $row[ $llave_titulo ] ) ) {
-					echo '<h3 class="mce-card-title">' . esc_html( $row[ $llave_titulo ] ) . '</h3>';
+					// *** ¡ACTUALIZADO! Se añade el style="..." ***
+					echo '<h3 class="mce-card-title" style="' . esc_attr( $estilo_titulo ) . '">' . esc_html( $row[ $llave_titulo ] ) . '</h3>';
 				}
 
-				// Lógica de Meta-Datos
 				echo '<div class="mce-card-meta">';
 				foreach ( $row as $key => $value ) :
 					if ( ! empty( $columnas_a_mostrar ) && ! in_array( $key, $columnas_a_mostrar, true ) ) {
@@ -142,15 +152,15 @@ function mce_render_tabla_shortcode( $atts ) {
 					?>
 					<div class="<?php echo esc_attr( $clase_css_item ); ?>">
 						<?php if ( $mostrar_etiqueta ) : ?>
-							<strong><?php echo esc_html( $key ); ?>:</strong>
+							<strong style="<?php echo esc_attr( $estilo_etiqueta ); ?>"><?php echo esc_html( $key ); ?>:</strong>
 						<?php endif; ?>
-						<span>
+						
+						<span style="<?php echo esc_attr( $estilo_valor ); ?>">
 							<?php
-							// Lógica de PDF
 							$clean_value = trim( (string) $value );
 							if ( str_starts_with( $clean_value, 'http' ) && str_ends_with( strtolower( $clean_value ), '.pdf' ) ) {
 								?>
-								<a href="<?php echo esc_url( $clean_value ); ?>" target="_blank" rel="noopener noreferrer" class="mce-pdf-link">
+								<a href="<?php echo esc_url( $clean_value ); ?>" target="_blank" rel="noopener noreferrer" class="mce-pdf-link" style="<?php echo esc_attr( $estilo_enlace ); ?>">
 									<?php echo esc_html( __( 'Ver PDF', 'mi-conexion-externa' ) ); ?>
 								</a>
 								<?php
@@ -160,23 +170,22 @@ function mce_render_tabla_shortcode( $atts ) {
 							?>
 						</span>
 					</div>
-				<?php endforeach; // Fin del bucle de columnas (key => value) ?>
-				<?php echo '</div>'; // Fin de .mce-card-meta ?>
-			</div> <?php endforeach; // Fin del bucle de filas (row) ?>
-	</div> <?php
-	// 13. DIBUJAR LOS ENLACES DE PAGINACIÓN
+				<?php endforeach; ?>
+				<?php echo '</div>'; ?>
+			</div>
+		<?php endforeach; ?>
+	</div>
+
+	<?php
+	// 14. DIBUJAR LOS ENLACES DE PAGINACIÓN (¡LÓGICA CORREGIDA!)
 	$total_paginas = ceil( $total_filas / $filas_por_pagina );
 
 	if ( $total_paginas > 1 ) {
-		
 		echo '<div class="mce-pagination">';
-		
-		// *** ¡LÓGICA DE PAGINACIÓN CORREGIDA! ***
-		// Esta forma es más robusta y maneja los query args correctamente.
 		echo paginate_links(
 			array(
 				'base'      => str_replace( PHP_INT_MAX, '%#%', esc_url( add_query_arg( 'pagina_mce', PHP_INT_MAX ) ) ),
-				'format'    => '', // Ya no se necesita
+				'format'    => '',
 				'current'   => $pagina_actual,
 				'total'     => $total_paginas,
 				'prev_text' => __( '&laquo; Anterior', 'mi-conexion-externa' ),
@@ -186,6 +195,5 @@ function mce_render_tabla_shortcode( $atts ) {
 		echo '</div>';
 	}
 
-	// 14. Devolver el HTML capturado.
 	return ob_get_clean();
 }

@@ -12,13 +12,12 @@
  * Domain Path:       /languages
  */
 
-// Regla 1: Mejor Práctica de Seguridad. Evitar acceso directo.
 if ( ! defined( 'ABSPATH' ) ) {
-	exit; // Salir si se accede directamente.
+	exit;
 }
 
 /**
- * Definición de Constantes del Plugin
+ * Constantes
  */
 define( 'MCE_VERSION', '1.0.0' );
 define( 'MCE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
@@ -26,69 +25,67 @@ define( 'MCE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'MCE_PLUGIN_FILE', __FILE__ );
 
 /**
- * Hook de Activación del Plugin.
+ * Hooks de Activación/Desactivación
  */
 function mce_plugin_activate() {
 }
 register_activation_hook( MCE_PLUGIN_FILE, 'mce_plugin_activate' );
 
-/**
- * Hook de Desactivación del Plugin.
- */
 function mce_plugin_deactivate() {
 }
-register_activation_hook( MCE_PLUGIN_FILE, 'mce_plugin_deactivate' );
+register_deactivation_hook( MCE_PLUGIN_FILE, 'mce_plugin_deactivate' );
 
 /**
  * Carga del núcleo del Plugin.
+ *
+ * *** ¡LIMPIADO! ***
  */
 function mce_load_plugin_core() {
 
-	// Cargar el dominio de texto para traducciones
 	load_plugin_textdomain(
 		'mi-conexion-externa',
 		false,
 		dirname( plugin_basename( MCE_PLUGIN_FILE ) ) . '/languages/'
 	);
 
-	// --- 1. Cargamos los archivos de clases GLOBALES ---
+	// --- 1. Cargar GLOBALES ---
 	require_once MCE_PLUGIN_DIR . 'includes/class-mce-db-handler.php';
 	require_once MCE_PLUGIN_DIR . 'includes/mce-shortcodes.php';
 
-	// --- 2. Cargamos el núcleo del ADMIN (LÓGICA CORREGIDA) ---
+	// --- 2. Cargar ADMIN (Lógica corregida) ---
 	if ( is_admin() ) {
 		
-		// 1. Cargar TODAS las clases del admin PRIMERO
+		// Cargar clases del admin
 		require_once MCE_PLUGIN_DIR . 'admin/class-mce-settings-page.php';
 		require_once MCE_PLUGIN_DIR . 'admin/class-mce-query-page.php';
 		require_once MCE_PLUGIN_DIR . 'admin/class-mce-help-page.php';
-		require_once MCE_PLUGIN_DIR . 'admin/class-mce-css-page.php';
-		require_once MCE_PLUGIN_DIR . 'admin/class-mce-admin-loader.php'; // Cargar el cargador AL FINAL
+		// ¡Ya no cargamos class-mce-css-page.php!
+		require_once MCE_PLUGIN_DIR . 'admin/class-mce-admin-loader.php';
 
-		// 2. Instanciar las clases de página
+		// Instanciar clases
 		$settings_page = new MCE_Settings_Page();
 		$query_page    = new MCE_Query_Page();
 		$help_page     = new MCE_Help_Page();
-		$css_page      = new MCE_CSS_Page();
 		
-		// 3. Instanciar el cargador y pasarle las dependencias
-		new MCE_Admin_Loader( $query_page, $settings_page, $help_page, $css_page );
+		// Iniciar el cargador del menú
+		new MCE_Admin_Loader( $query_page, $settings_page, $help_page );
 	}
 	
-	// 3. Cargamos la integración de Elementor Pro (condicional)
+	// 3. Cargar ELEMENTOR PRO (Condicional)
 	add_action( 'plugins_loaded', 'mce_load_elementor_pro_integration', 11 );
 	
-	// 4. Enganchamos la función que imprime el CSS personalizado en el <head>
-	add_action( 'wp_head', 'mce_output_custom_css', 99 );
+	// 4. *** ¡ACCIÓN ELIMINADA! ***
+	// Ya no imprimimos CSS personalizado en el footer.
+	// add_action( 'wp_footer', 'mce_output_custom_css_in_footer', 999 );
 
-	// 5. Registramos los estilos del frontend (nuestro CSS por defecto).
+	// 5. Registrar CSS POR DEFECTO (Aún lo necesitamos para el layout)
 	add_action( 'wp_enqueue_scripts', 'mce_register_public_styles_global' );
 }
 add_action( 'plugins_loaded', 'mce_load_plugin_core' );
 
 
 /**
- * Función de carga condicional para la integración de Elementor Pro.
+ * Carga condicional de Elementor Pro
  */
 function mce_load_elementor_pro_integration() {
 	if ( ! defined( 'ELEMENTOR_PRO_VERSION' ) ) {
@@ -102,19 +99,9 @@ function mce_load_elementor_pro_integration() {
 }
 
 /**
- * Imprime el CSS guardado en la BBDD dentro del <head> del sitio.
- * (Corregido para eliminar doble sanitización)
+ * *** ¡FUNCIÓN ELIMINADA! ***
+ * Ya no necesitamos 'mce_output_custom_css_in_footer'.
  */
-function mce_output_custom_css() {
-	$custom_css = get_option( 'mce_custom_css' );
-
-	if ( ! empty( $custom_css ) ) {
-		echo '' . "\n";
-		echo '<style type="text/css" id="mce-custom-styles">' . "\n";
-		echo $custom_css; // Se imprime crudo, ya se sanitizó al guardar
-		echo "\n" . '</style>' . "\n";
-	}
-}
 
 /**
  * Registra nuestro archivo CSS por defecto.
