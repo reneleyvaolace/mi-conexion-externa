@@ -3,7 +3,7 @@
  * Plugin Name:       CoreAura: Conexión Externa
  * Plugin URI:        https://ejemplo.com/mi-conexion-externa
  * Description:       Conecta WordPress con una base de datos externa para sincronizar contenido.
- * Version:           1.1.5
+ * Version:           1.1.6
  * Author:            CoreAura
  * Author URI:        https://ejemplo.com
  * License:           GPL v2 or later
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Constantes
  */
-define( 'MCE_VERSION', '1.1.5' ); // Versión subida para forzar caché del JS
+define( 'MCE_VERSION', '1.1.6' ); // Versión subida para forzar caché del JS
 define( 'MCE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'MCE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'MCE_PLUGIN_FILE', __FILE__ );
@@ -115,8 +115,8 @@ function mce_register_public_scripts() {
 	// Esto solo se imprimirá en la página si el script
 	// es llamado por wp_enqueue_script() (lo cual hace nuestro shortcode).
 	wp_localize_script(
-		'mce-public-script', // El "handle" del script al que se adjunta
-		'mce_ajax_object',   // El nombre del objeto JS que se creará
+		'mce-public-script',
+		'mce_ajax_object',
 		array(
 			'ajax_url'   => admin_url( 'admin-ajax.php' ),
 			'nonce'      => wp_create_nonce( 'mce_ajax_nonce' ),
