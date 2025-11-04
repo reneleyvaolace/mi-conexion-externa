@@ -14,6 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * *** ¡LIMPIADO! ***
  * Ya no carga la clase 'mce-css-page'.
+ * *** ¡ACTUALIZADO! ***
+ * Se usa el nombre de la empresa "CoreAura".
  */
 class MCE_Admin_Loader {
 
@@ -40,8 +42,8 @@ class MCE_Admin_Loader {
 	public function register_admin_pages() {
 		// 1. Menú Principal
 		add_menu_page(
-			__( 'Conexión Externa', 'mi-conexion-externa' ),
-			__( 'Conexión Externa', 'mi-conexion-externa' ),
+			__( 'CoreAura Conexión', 'mi-conexion-externa' ), // Título de página
+			__( 'CoreAura Conexión', 'mi-conexion-externa' ), // Título de menú
 			'manage_options',
 			'mce-main-menu',
 			array( $this->query_page, 'create_query_page_content' ),

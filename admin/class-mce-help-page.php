@@ -5,16 +5,12 @@
  * @package MiConexionExterna
  */
 
-// Regla 1: Mejor Práctica de Seguridad. Evitar acceso directo.
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
  * Clase MCE_Help_Page
- *
- * No tiene hooks, solo un método público 'render'
- * que es llamado por el cargador principal del admin.
  */
 class MCE_Help_Page {
 
@@ -22,19 +18,19 @@ class MCE_Help_Page {
 	 * Renderiza el contenido HTML de la página "Ayuda / Guía de Uso".
 	 *
 	 * *** ¡ACTUALIZADO! ***
-	 * Se documentan los nuevos atributos del shortcode.
+	 * Se documenta el método de estilos por atributos.
 	 */
 	public function render_page_content() {
 		?>
 		<div class="wrap">
-			<h1><?php echo esc_html( __( 'Guía de Uso - Mi Conexión Externa', 'mi-conexion-externa' ) ); ?></h1>
+			<h1><?php echo esc_html( __( 'Guía de Uso - CoreAura Conexión', 'mi-conexion-externa' ) ); ?></h1>
 			<p><?php echo esc_html( __( '¡Bienvenido! Este plugin le permite conectarse a una base de datos externa y mostrar sus datos dentro de WordPress.', 'mi-conexion-externa' ) ); ?></p>
 
 			<div class="mce-help-section">
 				<h2><?php echo esc_html( __( 'Paso 1: Configurar la Conexión', 'mi-conexion-externa' ) ); ?></h2>
 				<ol>
 					<li><?php echo esc_html( __( 'Vaya a la pestaña "Ajustes".', 'mi-conexion-externa' ) ); ?></li>
-					<li><?php echo esc_html( __( 'Rellene los 5 campos con las credenciales de su base de datos (IP/Host, Puerto, Nombre de BBDD, Usuario y Contraseña).', 'mi-conexion-externa' ) ); ?></li>
+					<li><?php echo esc_html( __( 'Rellene las 5 credenciales de su base de datos (IP/Host, Puerto, Nombre de BBDD, Usuario y Contraseña).', 'mi-conexion-externa' ) ); ?></li>
 					<li><?php echo esc_html( __( 'Haga clic en "Guardar Cambios".', 'mi-conexion-externa' ) ); ?></li>
 					<li><?php echo esc_html( __( 'Use el botón "Probar Conexión a BBDD" para confirmar que todo es correcto. Debe ver un mensaje de "¡Éxito!".', 'mi-conexion-externa' ) ); ?></li>
 				</ol>
@@ -42,49 +38,42 @@ class MCE_Help_Page {
 			</div>
 
 			<div class="mce-help-section">
-				<h2><?php echo esc_html( __( 'Paso 2: Mostrar Datos (Dos Opciones)', 'mi-conexion-externa' ) ); ?></h2>
-				<p><?php echo esc_html( __( 'Una vez la conexión esté activa, tiene dos formas de mostrar los datos:', 'mi-conexion-externa' ) ); ?></p>
-				
-				<hr>
-
-				<h3><?php echo esc_html( __( 'Opción A: Shortcode (Para cualquier página o Elementor Gratuito)', 'mi-conexion-externa' ) ); ?></h3>
-				<p><?php echo esc_html( __( 'Este método funciona en cualquier página, entrada, o dentro de un widget "Shortcode" de Elementor gratuito.', 'mi-conexion-externa' ) ); ?></p>
+				<h2><?php echo esc_html( __( 'Paso 2: Mostrar Datos (Opción A - Shortcode)', 'mi-conexion-externa' ) ); ?></h2>
+				<p><?php echo esc_html( __( 'Este es el método principal. Funciona en cualquier página o en el widget "Shortcode" de Elementor.', 'mi-conexion-externa' ) ); ?></p>
 				
 				<h4><?php echo esc_html( __( 'Uso Básico', 'mi-conexion-externa' ) ); ?></h4>
-				<p><?php echo esc_html( __( 'Muestra todas las columnas de una tabla, con un límite de 10 filas y 3 columnas.', 'mi-conexion-externa' ) ); ?></p>
 				<pre><code>[mce_mostrar_tabla tabla="mce_productos"]</code></pre>
 
 				<h4><?php echo esc_html( __( 'Uso Avanzado (Atributos)', 'mi-conexion-externa' ) ); ?></h4>
 				<p><?php echo esc_html( __( 'Puede combinar los siguientes atributos para un control total:', 'mi-conexion-externa' ) ); ?></p>
 				<ul>
 					<li><strong>tabla</strong>: <em>(Obligatorio)</em> <?php echo esc_html( __( 'El nombre de la tabla que desea consultar.', 'mi-conexion-externa' ) ); ?></li>
+					<li><strong>paginacion</strong>: <em>(Opcional)</em> <?php echo esc_html( __( 'Número de filas por página.', 'mi-conexion-externa' ) ); ?> (Defecto: 10)</li>
 					<li><strong>columnas</strong>: <em>(Opcional)</em> <?php echo esc_html( __( 'Número de columnas de la cuadrícula (1-6).', 'mi-conexion-externa' ) ); ?> (Defecto: 3)</li>
-					<li><strong>limite</strong>: <em>(Opcional)</em> <?php echo esc_html( __( 'Número de filas a mostrar.', 'mi-conexion-externa' ) ); ?> (Defecto: 10)</li>
-					<li><strong>columnas_mostrar</strong>: <em>(Opcional)</em> <?php echo esc_html( __( 'Lista separada por comas de las únicas columnas que desea mostrar.', 'mi-conexion-externa' ) ); ?> (Defecto: todas)</li>
+					<li><strong>columnas_mostrar</strong>: <em>(Opcional)</em> <?php echo esc_html( __( 'Lista (separada por comas) de las únicas columnas que desea mostrar.', 'mi-conexion-externa' ) ); ?></li>
 					<li><strong>llave_titulo</strong>: <em>(Opcional)</em> <?php echo esc_html( __( 'La columna que actuará como título principal (sin etiqueta).', 'mi-conexion-externa' ) ); ?></li>
-					<li><strong>ocultar_etiquetas</strong>: <em>(Opcional)</em> <?php echo esc_html( __( 'Lista separada por comas de columnas que no mostrarán su etiqueta (solo el valor).', 'mi-conexion-externa' ) ); ?></li>
+					<li><strong>ocultar_etiquetas</strong>: <em>(Opcional)</em> <?php echo esc_html( __( 'Lista (separada por comas) de columnas que no mostrarán su etiqueta (solo el valor).', 'mi-conexion-externa' ) ); ?></li>
 				</ul>
-
+				
+				<hr>
+				<h4><?php echo esc_html( __( '¡NUEVO! Cómo Estilizar (Atributos de Estilo)', 'mi-conexion-externa' ) ); ?></h4>
+				<p><?php echo esc_html( __( 'Para garantizar que sus estilos predominen sobre el tema, añada estos atributos. Siempre ganarán.', 'mi-conexion-externa' ) ); ?></p>
+				<ul>
+					<li><strong>color_titulo</strong>: <?php echo esc_html( __( 'Un color CSS (ej. "red", "#FF0000").', 'mi-conexion-externa' ) ); ?></li>
+					<li><strong>tamano_titulo</strong>: <?php echo esc_html( __( 'Un tamaño de fuente CSS (ej. "20px", "1.5rem").', 'mi-conexion-externa' ) ); ?></li>
+					<li><strong>color_etiqueta</strong>: <?php echo esc_html( __( 'Color para las etiquetas (ej. "sku:", "precio:").', 'mi-conexion-externa' ) ); ?></li>
+					<li><strong>color_valor</strong>: <?php echo esc_html( __( 'Color para los valores (ej. "LP15-001").', 'mi-conexion-externa' ) ); ?></li>
+					<li><strong>color_enlace</strong>: <?php echo esc_html( __( 'Color para los enlaces PDF.', 'mi-conexion-externa' ) ); ?></li>
+				</ul>
+				
 				<h4><?php echo esc_html( __( 'Ejemplo Completo', 'mi-conexion-externa' ) ); ?></h4>
-				<p><?php echo esc_html( __( 'Este shortcode mostraría 4 columnas, solo las columnas "nombre", "sku" y "documento", usaría "nombre" como el título, y ocultaría la etiqueta de "documento" (mostrando solo el enlace "Ver PDF"):', 'mi-conexion-externa' ) ); ?></p>
-				<pre><code>[mce_mostrar_tabla tabla="mce_productos" columnas="4" limite="8" columnas_mostrar="nombre,sku,documento" llave_titulo="nombre" ocultar_etiquetas="documento"]</code></pre>
-
-
+				<pre><code>[mce_mostrar_tabla tabla="mce_productos" paginacion="4" columnas="4" llave_titulo="nombre" color_titulo="red" columnas_mostrar="nombre,sku"]</code></pre>
+				
 				<hr>
 
-				<h3><?php echo esc_html( __( 'Opción B: Integración con Elementor Pro (Avanzado)', 'mi-conexion-externa' ) ); ?></h3>
+				<h3><?php echo esc_html( __( 'Opción B: Integración con Elementor Pro', 'mi-conexion-externa' ) ); ?></h3>
 				<p><?php echo esc_html( __( 'Esta opción está "latente" y se activará automáticamente si instala Elementor Pro.', 'mi-conexion-externa' ) ); ?></p>
-				<ol>
-					<li><?php echo esc_html( __( 'Arrastre el widget "Loop Grid" a su página.', 'mi-conexion-externa' ) ); ?></li>
-					<li><?php echo esc_html( __( 'En la pestaña "Query" (Consulta), seleccione como "Fuente" (Source) nuestra consulta personalizada:', 'mi-conexion-externa' ) ); ?> <strong>"<?php echo esc_html( __( 'Productos Externos (MCE)', 'mi-conexion-externa' ) ); ?>"</strong>.</li>
-					<li><?php echo esc_html( __( '¡Listo! Ahora diseñe su "Plantilla" (template) de loop como lo haría normalmente.', 'mi-conexion-externa' ) ); ?></li>
-				</ol>
-			</div>
-			
-			<div class="mce-help-section">
-				<h2><?php echo esc_html( __( 'Paso 3: Explorar (Herramienta de Desarrollo)', 'mi-conexion-externa' ) ); ?></h2>
-				<p><?php echo esc_html( __( 'La pestaña "Explorador" es una herramienta de depuración para usted. Le permite confirmar que la conexión está activa y ver una lista de todas las tablas en su base de datos externa, así como previsualizar las primeras 100 filas de cualquier tabla.', 'mi-conexion-externa' ) ); ?></p>
-			</div>
+				</div>
 
 			<style>
 				.mce-help-section { background: #ffffff; border: 1px solid #e0e0e0; padding: 15px 25px; margin-top: 20px; border-radius: 4px; }

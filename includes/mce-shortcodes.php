@@ -22,7 +22,8 @@ add_action( 'init', 'mce_register_shortcodes' );
 /**
  * Lógica de renderizado del Shortcode
  *
- * *** ¡REFRACTORIZADO CON ESTILOS EN LÍNEA !important! ***
+ * *** ¡LIMPIADO! ***
+ * Ya no se llama a wp_enqueue_style.
  */
 function mce_render_tabla_shortcode( $atts ) {
 
@@ -31,7 +32,7 @@ function mce_render_tabla_shortcode( $atts ) {
 		return '<p style="color:red;">' . esc_html( __( 'Error del Plugin [MCE]: Falta el atributo "tabla" en el shortcode. Ej: [mce_mostrar_tabla tabla="su_tabla"]', 'mi-conexion-externa' ) ) . '</p>';
 	}
 
-	// 2. Parsear atributos (¡NUEVOS ATRIBUTOS DE ESTILO!)
+	// 2. Parsear atributos
 	$a = shortcode_atts(
 		array(
 			// Control de Datos
@@ -44,7 +45,7 @@ function mce_render_tabla_shortcode( $atts ) {
 			
 			// Control de Estilos
 			'color_titulo'      => '',
-			'tamano_titulo'     => '', // ej. '1.5rem' o '20px'
+			'tamano_titulo'     => '',
 			'color_etiqueta'    => '',
 			'color_valor'       => '',
 			'color_enlace'      => '',
@@ -101,8 +102,8 @@ function mce_render_tabla_shortcode( $atts ) {
 		return '<p>' . esc_html( sprintf( __( 'No se encontraron datos en la tabla "%s".', 'mi-conexion-externa' ), $tabla ) ) . '</p>';
 	}
 
-	// 10. Cargar el CSS (Lo seguimos necesitando para el LAYOUT: grid, padding, etc.)
-	wp_enqueue_style( 'mce-public-style' );
+	// 10. *** ¡LÍNEA ELIMINADA! ***
+	// wp_enqueue_style( 'mce-public-style' ); (Ya no es necesario)
 
 	// 11. Estilo en línea para columnas
 	$inline_style = sprintf(
@@ -110,21 +111,16 @@ function mce_render_tabla_shortcode( $atts ) {
 		$columnas
 	);
 
-	// 12. *** ¡NUEVO! CONSTRUIR ESTILOS EN LÍNEA CON !important ***
-	// Sanitizamos el valor y le añadimos !important para ganar al tema.
+	// 12. Construir estilos en línea
 	$estilo_titulo = '';
 	if ( ! empty( $a['color_titulo'] ) ) { $estilo_titulo .= 'color: ' . esc_attr( $a['color_titulo'] ) . ' !important;'; }
 	if ( ! empty( $a['tamano_titulo'] ) ) { $estilo_titulo .= 'font-size: ' . esc_attr( $a['tamano_titulo'] ) . ' !important;'; }
-
 	$estilo_etiqueta = '';
 	if ( ! empty( $a['color_etiqueta'] ) ) { $estilo_etiqueta .= 'color: ' . esc_attr( $a['color_etiqueta'] ) . ' !important;'; }
-	
 	$estilo_valor = '';
 	if ( ! empty( $a['color_valor'] ) ) { $estilo_valor .= 'color: ' . esc_attr( $a['color_valor'] ) . ' !important;'; }
-
 	$estilo_enlace = '';
-	if ( ! empty( $a['color_enlace'] ) ) { $estilo_enlace .= 'color: ' . esc_attr( $a['color_enlace'] ) . ' !important;'; }
-
+	if ( ! empty( $a['color_enlace'] ) ) { $estilo_enlace .= 'color: ' . esc_attr( $a['color_enlace'] ) . ' !imporant;'; }
 
 	// 13. Construir el HTML
 	ob_start();
@@ -177,7 +173,7 @@ function mce_render_tabla_shortcode( $atts ) {
 	</div>
 
 	<?php
-	// 14. DIBUJAR LOS ENLACES DE PAGINACIÓN (¡LÓGICA CORREGIDA!)
+	// 14. DIBUJAR LOS ENLACES DE PAGINACIÓN
 	$total_paginas = ceil( $total_filas / $filas_por_pagina );
 
 	if ( $total_paginas > 1 ) {
