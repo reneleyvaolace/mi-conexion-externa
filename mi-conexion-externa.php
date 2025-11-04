@@ -2,8 +2,7 @@
 /**
  * Plugin Name:       CoreAura: Conexión Externa
  * Plugin URI:        https://ejemplo.com/mi-conexion-externa
- * Description:       Conecta WordPress con una base de datos externa para sincronizar contenido.
- * Version:           1.0.8
+ * Version:           1.1.0
  * Author:            CoreAura
  * Author URI:        https://ejemplo.com
  * License:           GPL v2 or later
@@ -19,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Constantes
  */
-define( 'MCE_VERSION', '1.0.8' ); // Aumentamos la versión
+define( 'MCE_VERSION', '1.1.0' ); // Versión subida por la nueva feature de AJAX
 define( 'MCE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'MCE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'MCE_PLUGIN_FILE', __FILE__ );
@@ -37,8 +36,6 @@ register_deactivation_hook( MCE_PLUGIN_FILE, 'mce_plugin_deactivate' );
 
 /**
  * Carga del núcleo del Plugin.
- *
- * *** ¡REFRACTORIZADO PARA THEME.JSON! ***
  */
 function mce_load_plugin_core() {
 
@@ -51,11 +48,6 @@ function mce_load_plugin_core() {
 	// --- 1. Cargar GLOBALES ---
 	require_once MCE_PLUGIN_DIR . 'includes/class-mce-db-handler.php';
 	require_once MCE_PLUGIN_DIR . 'includes/mce-shortcodes.php';
-	
-	// *** ¡NUEVO! ***
-	// 1b. Cargar el inyector de estilos de theme.json
-	require_once MCE_PLUGIN_DIR . 'includes/class-mce-theme-json.php';
-	new MCE_Theme_Json();
 
 	// --- 2. Cargar ADMIN ---
 	if ( is_admin() ) {
@@ -75,8 +67,8 @@ function mce_load_plugin_core() {
 	// 3. Cargar ELEMENTOR PRO (Condicional)
 	add_action( 'plugins_loaded', 'mce_load_elementor_pro_integration', 11 );
 	
-	// 4. *** ¡ACCIÓN ELIMINADA! ***
-	// Ya no registramos el archivo CSS público.
+	// 4. Registrar CSS y JS del Frontend
+	add_action( 'wp_enqueue_scripts', 'mce_register_public_scripts' );
 }
 add_action( 'plugins_loaded', 'mce_load_plugin_core' );
 
@@ -96,6 +88,24 @@ function mce_load_elementor_pro_integration() {
 }
 
 /**
- * *** ¡FUNCIÓN ELIMINADA! ***
- * Ya no necesitamos 'mce_register_public_styles_global'.
+ * *** ¡FUNCIÓN ACTUALIZADA! ***
+ * Registra nuestro CSS y JS por defecto.
  */
+function mce_register_public_scripts() {
+	// Registrar el CSS
+	wp_register_style(
+		'mce-public-style', 
+		MCE_PLUGIN_URL . 'public/css/mce-public-style.css',
+		array(), 
+		MCE_VERSION
+	);
+	
+	// *** ¡NUEVO! Registrar el JS ***
+	wp_register_script(
+		'mce-public-script', // El "nombre" de nuestro script
+		MCE_PLUGIN_URL . 'public/js/mce-public-script.js',
+		array( 'jquery' ), // Dependencia: necesita que WordPress cargue jQuery
+		MCE_VERSION,
+		true // Cargar en el footer
+	);
+}

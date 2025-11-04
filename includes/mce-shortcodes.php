@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Registra el shortcode
+ * 1. REGISTRAR EL SHORTCODE
  */
 function mce_register_shortcodes() {
 	remove_shortcode( 'mostrar_mce_productos' );
@@ -20,10 +20,9 @@ add_action( 'init', 'mce_register_shortcodes' );
 
 
 /**
- * Lógica de renderizado del Shortcode
+ * 2. LA LÓGICA DE RENDERIZADO DEL SHORTCODE
  *
- * *** ¡LIMPIADO! ***
- * Ya no se llama a wp_enqueue_style.
+ * *** ¡REFRACTORIZADO PARA AJAX! ***
  */
 function mce_render_tabla_shortcode( $atts ) {
 
@@ -65,11 +64,14 @@ function mce_render_tabla_shortcode( $atts ) {
 	if ( $filas_por_pagina <= 0 ) { $filas_por_pagina = 10; }
 
 	// 4. Obtener página actual
+	// *** ¡ACTUALIZADO! Ahora también acepta el 'pagina' desde los atributos (para AJAX) ***
 	$pagina_actual = 1;
-	if ( isset( $_GET['pagina_mce'] ) ) {
-		$pagina_actual = intval( $_GET['pagina_mce'] );
-		if ( $pagina_actual < 1 ) { $pagina_actual = 1; }
+	if ( isset( $a['pagina'] ) ) {
+		$pagina_actual = intval( $a['pagina'] ); // Usado por AJAX
+	} elseif ( isset( $_GET['pagina_mce'] ) ) {
+		$pagina_actual = intval( $_GET['pagina_mce'] ); // Usado por la recarga de página
 	}
+	if ( $pagina_actual < 1 ) { $pagina_actual = 1; }
 
 	// 5. Convertir strings en arrays
 	$columnas_a_mostrar = array();
@@ -102,8 +104,17 @@ function mce_render_tabla_shortcode( $atts ) {
 		return '<p>' . esc_html( sprintf( __( 'No se encontraron datos en la tabla "%s".', 'mi-conexion-externa' ), $tabla ) ) . '</p>';
 	}
 
-	// 10. *** ¡LÍNEA ELIMINADA! ***
-	// wp_enqueue_style( 'mce-public-style' ); (Ya no es necesario)
+	// 10. *** ¡NUEVO! Cargar los scripts para AJAX ***
+	// Cargamos el CSS Y el nuevo JS
+	wp_enqueue_style( 'mce-public-style' );
+	wp_enqueue_script( 'mce-public-script' ); // (Lo crearemos en el prox. paso)
+	
+	// Le pasamos el Nonce y la URL de AJAX a nuestro JS
+	wp_localize_script( 'mce-public-script', 'mce_ajax_object', array(
+		'ajax_url'   => admin_url( 'admin-ajax.php' ),
+		'nonce'      => wp_create_nonce( 'mce_ajax_nonce' ),
+	) );
+
 
 	// 11. Estilo en línea para columnas
 	$inline_style = sprintf(
@@ -120,76 +131,134 @@ function mce_render_tabla_shortcode( $atts ) {
 	$estilo_valor = '';
 	if ( ! empty( $a['color_valor'] ) ) { $estilo_valor .= 'color: ' . esc_attr( $a['color_valor'] ) . ' !important;'; }
 	$estilo_enlace = '';
-	if ( ! empty( $a['color_enlace'] ) ) { $estilo_enlace .= 'color: ' . esc_attr( $a['color_enlace'] ) . ' !imporant;'; }
+	if ( ! empty( $a['color_enlace'] ) ) { $estilo_enlace .= 'color: ' . esc_attr( $a['color_enlace'] ) . ' !important;'; }
 
 	// 13. Construir el HTML
 	ob_start();
 	?>
 
-	<div class="mce-productos-grid" style="<?php echo esc_attr( $inline_style ); ?>">
-		<?php foreach ( $data as $row ) : ?>
-			<div class="mce-producto-card">
-				<?php
-				if ( ! empty( $llave_titulo ) && isset( $row[ $llave_titulo ] ) ) {
-					echo '<h3 class="mce-card-title" style="' . esc_attr( $estilo_titulo ) . '">' . esc_html( $row[ $llave_titulo ] ) . '</h3>';
-				}
+	<div class="mce-shortcode-wrapper"
+		data-tabla="<?php echo esc_attr( $tabla ); ?>"
+		data-columnas="<?php echo esc_attr( $columnas ); ?>"
+		data-paginacion="<?php echo esc_attr( $filas_por_pagina ); ?>"
+		data-columnas_mostrar="<?php echo esc_attr( $columnas_a_mostrar_str ); ?>"
+		data-llave_titulo="<?php echo esc_attr( $llave_titulo ); ?>"
+		data-ocultar_etiquetas="<?php echo esc_attr( $etiquetas_a_ocultar_str ); ?>"
+		data-color_titulo="<?php echo esc_attr( $a['color_titulo'] ); ?>"
+		data-tamano_titulo="<?php echo esc_attr( $a['tamano_titulo'] ); ?>"
+		data-color_etiqueta="<?php echo esc_attr( $a['color_etiqueta'] ); ?>"
+		data-color_valor="<?php echo esc_attr( $a['color_valor'] ); ?>"
+		data-color_enlace="<?php echo esc_attr( $a['color_enlace'] ); ?>"
+	>
 
-				echo '<div class="mce-card-meta">';
-				foreach ( $row as $key => $value ) :
-					if ( ! empty( $columnas_a_mostrar ) && ! in_array( $key, $columnas_a_mostrar, true ) ) {
-						continue;
-					}
-					if ( $key === $llave_titulo ) {
-						continue;
+		<div class="mce-productos-grid" style="<?php echo esc_attr( $inline_style ); ?>">
+			<?php foreach ( $data as $row ) : ?>
+				<div class="mce-producto-card">
+					<?php
+					if ( ! empty( $llave_titulo ) && isset( $row[ $llave_titulo ] ) ) {
+						echo '<h3 class="mce-card-title" style="' . esc_attr( $estilo_titulo ) . '">' . esc_html( $row[ $llave_titulo ] ) . '</h3>';
 					}
 
-					$mostrar_etiqueta = ! in_array( $key, $etiquetas_a_ocultar, true );
-					$clase_css_item = $mostrar_etiqueta ? 'mce-card-item' : 'mce-card-item mce-item-no-label';
-					?>
-					<div class="<?php echo esc_attr( $clase_css_item ); ?>">
-						<?php if ( $mostrar_etiqueta ) : ?>
-							<strong style="<?php echo esc_attr( $estilo_etiqueta ); ?>"><?php echo esc_html( $key ); ?>:</strong>
-						<?php endif; ?>
-						
-						<span style="<?php echo esc_attr( $estilo_valor ); ?>">
-							<?php
-							$clean_value = trim( (string) $value );
-							if ( str_starts_with( $clean_value, 'http' ) && str_ends_with( strtolower( $clean_value ), '.pdf' ) ) {
-								?>
-								<a href="<?php echo esc_url( $clean_value ); ?>" target="_blank" rel="noopener noreferrer" class="mce-pdf-link" style="<?php echo esc_attr( $estilo_enlace ); ?>">
-									<?php echo esc_html( __( 'Ver PDF', 'mi-conexion-externa' ) ); ?>
-								</a>
+					echo '<div class="mce-card-meta">';
+					foreach ( $row as $key => $value ) :
+						if ( ! empty( $columnas_a_mostrar ) && ! in_array( $key, $columnas_a_mostrar, true ) ) {
+							continue;
+						}
+						if ( $key === $llave_titulo ) {
+							continue;
+						}
+
+						$mostrar_etiqueta = ! in_array( $key, $etiquetas_a_ocultar, true );
+						$clase_css_item = $mostrar_etiqueta ? 'mce-card-item' : 'mce-card-item mce-item-no-label';
+						?>
+						<div class="<?php echo esc_attr( $clase_css_item ); ?>">
+							<?php if ( $mostrar_etiqueta ) : ?>
+								<strong style="<?php echo esc_attr( $estilo_etiqueta ); ?>"><?php echo esc_html( $key ); ?>:</strong>
+							<?php endif; ?>
+							
+							<span style="<?php echo esc_attr( $estilo_valor ); ?>">
 								<?php
-							} else {
-								echo esc_html( $value );
-							}
-							?>
-						</span>
-					</div>
-				<?php endforeach; ?>
-				<?php echo '</div>'; ?>
-			</div>
-		<?php endforeach; ?>
-	</div>
+								$clean_value = trim( (string) $value );
+								if ( str_starts_with( $clean_value, 'http' ) && str_ends_with( strtolower( $clean_value ), '.pdf' ) ) {
+									?>
+									<a href="<?php echo esc_url( $clean_value ); ?>" target="_blank" rel="noopener noreferrer" class="mce-pdf-link" style="<?php echo esc_attr( $estilo_enlace ); ?>">
+										<?php echo esc_html( __( 'Ver PDF', 'mi-conexion-externa' ) ); ?>
+									</a>
+									<?php
+								} else {
+									echo esc_html( $value );
+								}
+								?>
+							</span>
+						</div>
+					<?php endforeach; ?>
+					<?php echo '</div>'; ?>
+				</div>
+			<?php endforeach; ?>
+		</div>
 
-	<?php
-	// 14. DIBUJAR LOS ENLACES DE PAGINACIÓN
-	$total_paginas = ceil( $total_filas / $filas_por_pagina );
+		<?php
+		// 14. DIBUJAR LOS ENLACES DE PAGINACIÓN (¡LÓGICA CORREGIDA!)
+		$total_paginas = ceil( $total_filas / $filas_por_pagina );
 
-	if ( $total_paginas > 1 ) {
-		echo '<div class="mce-pagination">';
-		echo paginate_links(
-			array(
-				'base'      => str_replace( PHP_INT_MAX, '%#%', esc_url( add_query_arg( 'pagina_mce', PHP_INT_MAX ) ) ),
-				'format'    => '',
-				'current'   => $pagina_actual,
-				'total'     => $total_paginas,
-				'prev_text' => __( '&laquo; Anterior', 'mi-conexion-externa' ),
-				'next_text' => __( 'Siguiente &raquo;', 'mi-conexion-externa' ),
-			)
-		);
-		echo '</div>';
-	}
+		if ( $total_paginas > 1 ) {
+			echo '<div class="mce-pagination">';
+			echo paginate_links(
+				array(
+					'base'      => str_replace( PHP_INT_MAX, '%#%', esc_url( add_query_arg( 'pagina_mce', PHP_INT_MAX ) ) ),
+					'format'    => '',
+					'current'   => $pagina_actual,
+					'total'     => $total_paginas,
+					'prev_text' => __( '&laquo; Anterior', 'mi-conexion-externa' ),
+					'next_text' => __( 'Siguiente &raquo;', 'mi-conexion-externa' ),
+				)
+			);
+			echo '</div>';
+		}
 
+		?>
+	</div> <?php
+	
 	return ob_get_clean();
 }
+
+
+/**
+ * *** ¡NUEVO! 4. EL RECEPTOR DE AJAX ***
+ *
+ * Esta función escucha las peticiones de AJAX desde nuestro JS.
+ */
+function mce_get_page_content_ajax() {
+	// 1. Seguridad: Verificar el Nonce
+	check_ajax_referer( 'mce_ajax_nonce', 'nonce' );
+
+	// 2. Recoger y sanitizar todos los atributos que nos envía el JS
+	$atts = array();
+	
+	// Datos
+	if ( isset( $_POST['tabla'] ) ) { $atts['tabla'] = sanitize_text_field( $_POST['tabla'] ); }
+	if ( isset( $_POST['columnas'] ) ) { $atts['columnas'] = intval( $_POST['columnas'] ); }
+	if ( isset( $_POST['paginacion'] ) ) { $atts['paginacion'] = intval( $_POST['paginacion'] ); }
+	if ( isset( $_POST['pagina'] ) ) { $atts['pagina'] = intval( $_POST['pagina'] ); }
+	if ( isset( $_POST['columnas_mostrar'] ) ) { $atts['columnas_mostrar'] = sanitize_text_field( $_POST['columnas_mostrar'] ); }
+	if ( isset( $_POST['llave_titulo'] ) ) { $atts['llave_titulo'] = sanitize_text_field( $_POST['llave_titulo'] ); }
+	if ( isset( $_POST['ocultar_etiquetas'] ) ) { $atts['ocultar_etiquetas'] = sanitize_text_field( $_POST['ocultar_etiquetas'] ); }
+	
+	// Estilos
+	if ( isset( $_POST['color_titulo'] ) ) { $atts['color_titulo'] = sanitize_text_field( $_POST['color_titulo'] ); }
+	if ( isset( $_POST['tamano_titulo'] ) ) { $atts['tamano_titulo'] = sanitize_text_field( $_POST['tamano_titulo'] ); }
+	if ( isset( $_POST['color_etiqueta'] ) ) { $atts['color_etiqueta'] = sanitize_text_field( $_POST['color_etiqueta'] ); }
+	if ( isset( $_POST['color_valor'] ) ) { $atts['color_valor'] = sanitize_text_field( $_POST['color_valor'] ); }
+	if ( isset( $_POST['color_enlace'] ) ) { $atts['color_enlace'] = sanitize_text_field( $_POST['color_enlace'] ); }
+	
+
+	// 3. ¡Reutilizar nuestra función de renderizado!
+	// Le pasamos los atributos limpios y nos devuelve el HTML.
+	$html = mce_render_tabla_shortcode( $atts );
+
+	// 4. Devolver el HTML al JavaScript
+	wp_send_json_success( array( 'html' => $html ) );
+}
+// Enganchamos la función para usuarios logueados (wp_ajax_) y visitantes (wp_ajax_nopriv_)
+add_action( 'wp_ajax_mce_get_page_content', 'mce_get_page_content_ajax' );
+add_action( 'wp_ajax_nopriv_mce_get_page_content', 'mce_get_page_content_ajax' );
