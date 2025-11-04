@@ -5,7 +5,6 @@
  * @package MiConexionExterna
  */
 
-// Regla 1: Mejor Práctica de Seguridad. Evitar acceso directo.
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -17,10 +16,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class MCE_CSS_Page {
 
-	/**
-	 * Constructor.
-	 * Registra los hooks para los campos.
-	 */
 	public function __construct() {
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 	}
@@ -30,35 +25,42 @@ class MCE_CSS_Page {
 	 */
 	public function register_settings() {
 		register_setting(
-			'mce_css_group', // Nombre del grupo
-			'mce_custom_css',  // Nombre de la opción en la BBDD
-			array( $this, 'sanitize_css' ) // Función para "limpiar" el CSS
+			'mce_css_group', 
+			'mce_custom_css',
+			array( $this, 'sanitize_css' ) // Usar la nueva función de sanitización
 		);
 
 		add_settings_section(
-			'mce_css_section', // ID de la sección
-			__( 'Editor de CSS Personalizado', 'mi-conexion-externa' ), // Título
-			array( $this, 'print_section_info' ), // Callback de descripción
-			'mce-css-page' // Slug de la página
+			'mce_css_section',
+			__( 'Editor de CSS Personalizado', 'mi-conexion-externa' ),
+			array( $this, 'print_section_info' ),
+			'mce-css-page'
 		);
 
 		add_settings_field(
-			'mce_custom_css_field', // ID del campo
-			__( 'Tu CSS Personalizado', 'mi-conexion-externa' ), // Título del campo
-			array( $this, 'render_css_field' ), // Callback del campo (textarea)
-			'mce-css-page', // Slug de la página
-			'mce_css_section' // ID de la sección padre
+			'mce_custom_css_field',
+			__( 'Tu CSS Personalizado', 'mi-conexion-externa' ),
+			array( $this, 'render_css_field' ),
+			'mce-css-page',
+			'mce_css_section'
 		);
 	}
 
 	/**
-	 * Sanitiza el CSS antes de guardarlo.
+	 * *** ¡FUNCIÓN DE SANITIZACIÓN CORREGIDA! ***
+	 *
+	 * Esta función limpia el CSS de forma segura, eliminando
+	 * únicamente etiquetas <script> maliciosas, pero
+	 * preservando intacta toda la sintaxis de CSS (., #, {, }, :, !important, etc.).
 	 *
 	 * @param string $input El CSS crudo del textarea.
 	 * @return string El CSS sanitizado.
 	 */
 	public function sanitize_css( $input ) {
-		return wp_strip_all_tags( $input );
+		// Eliminar cualquier etiqueta <script> y su contenido.
+		// Esta es una forma segura y no destructiva para el CSS.
+		$sanitized_input = preg_replace( '#<script(.*?)>(.*?)</script>#is', '', $input );
+		return $sanitized_input;
 	}
 
 	/**
@@ -71,32 +73,12 @@ class MCE_CSS_Page {
 	}
 
 	/**
-	 * Obtiene la plantilla de CSS por defecto (nuestro CSS "inteligente").
-	 *
-	 * @return string
+	 * Obtiene la plantilla de CSS por defecto.
 	 */
 	private function get_default_css_template() {
-		// Usamos un Heredoc para definir el string de la plantilla
 		$default_css = <<<CSS
 /* --- PLANTILLA DE ESTILOS ADAPTABLES --- */
 /* Para usar, descomenta (borra /* y */) las reglas que quieras cambiar. */
-
-/* --- Cuadrícula Principal (Grid) --- */
-/*
-.mce-productos-grid {
-	gap: 25px;
-	font-family: var(--wp--preset--font-family--body, sans-serif);
-}
-*/
-
-/* --- Tarjeta Individual --- */
-/*
-.mce-producto-card {
-	background: var(--wp--preset--color--base, #ffffff);
-	border: 1px solid var(--wp--preset--color--contrast-2, #e0e0e0);
-	border-radius: 8px;
-}
-*/
 
 /* --- Título de la Tarjeta (definido en "llave_titulo") --- */
 /*
@@ -107,79 +89,23 @@ class MCE_CSS_Page {
 	font-weight: 700;
 }
 */
-
-/* --- Contenedor de Meta-Datos --- */
-/*
-.mce-producto-card .mce-card-meta {
-	color: var(--wp--preset--color--contrast-3, #333);
-	font-size: var(--wp--preset--font-size--small, 0.9rem);
-}
-*/
-
-/* --- Cada Fila de Dato (ej. Sku: 123) --- */
-/*
-.mce-card-item {
-	justify-content: space-between;
-	border-bottom: 1px solid var(--wp--preset--color--contrast-2, #f0f0f0);
-}
-*/
-
-/* --- Etiqueta de la Fila (ej. "Sku:") --- */
-/*
-.mce-card-item strong {
-	color: var(--wp--preset--color--foreground, #111);
-	font-weight: 600;
-}
-*/
-
-/* --- Valor de la Fila (ej. "123") --- */
-/*
-.mce-card-item span {
-	text-align: right;
-	font-weight: 500;
-	color: var(--wp--preset--color--contrast-3, #333);
-}
-*/
-
-/* --- Fila SIN Etiqueta (de "ocultar_etiquetas") --- */
-/*
-.mce-card-item.mce-item-no-label {
-	font-size: var(--wp--preset--font-size--medium, 1rem);
-	font-weight: 500;
-	color: var(--wp--preset--color--foreground, #111);
-}
-*/
-
-/* --- Enlace PDF --- */
-/*
-.mce-pdf-link {
-	background: var(--wp--preset--color--contrast, #f4f4f4);
-	color: var(--wp--preset--color--primary, #0051d2);
-}
-.mce-pdf-link:hover {
-	background: var(--wp--preset--color--contrast-2, #e0e0e0);
-}
-*/
 CSS;
-		// Quitar la indentación inicial del Heredoc
 		return trim( preg_replace( '/^[\t ]*/m', '', $default_css ) );
 	}
 
 	/**
-	 * Renderiza el campo <textarea> y lo pre-llena con la plantilla.
+	 * Renderiza el campo <textarea> y el botón de reset.
 	 */
 	public function render_css_field() {
 		$saved_css   = get_option( 'mce_custom_css' );
 		$default_css = $this->get_default_css_template();
 		$css_to_show = ! empty( $saved_css ) ? $saved_css : $default_css;
 
-		// Imprimir el textarea principal
 		printf(
 			'<textarea name="mce_custom_css" id="mce_custom_css" class="large-text" rows="25" style="font-family: monospace; width: 100%%; white-space: pre;">%s</textarea>',
 			esc_textarea( $css_to_show )
 		);
 
-		// Imprimir la plantilla oculta (para el botón de Restablecer)
 		printf(
 			'<textarea id="mce-default-css-template" style="display:none;">%s</textarea>',
 			esc_textarea( $default_css )
