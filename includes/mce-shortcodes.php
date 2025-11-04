@@ -22,7 +22,7 @@ add_action( 'init', 'mce_register_shortcodes' );
 /**
  * 2. LA LÓGICA DE RENDERIZADO DEL SHORTCODE
  *
- * *** ¡REFRACTORIZADO PARA AJAX! ***
+ * *** ¡LIMPIADO! Se eliminó la llamada a wp_localize_script. ***
  */
 function mce_render_tabla_shortcode( $atts ) {
 
@@ -64,12 +64,11 @@ function mce_render_tabla_shortcode( $atts ) {
 	if ( $filas_por_pagina <= 0 ) { $filas_por_pagina = 10; }
 
 	// 4. Obtener página actual
-	// *** ¡ACTUALIZADO! Ahora también acepta el 'pagina' desde los atributos (para AJAX) ***
 	$pagina_actual = 1;
 	if ( isset( $a['pagina'] ) ) {
-		$pagina_actual = intval( $a['pagina'] ); // Usado por AJAX
+		$pagina_actual = intval( $a['pagina'] );
 	} elseif ( isset( $_GET['pagina_mce'] ) ) {
-		$pagina_actual = intval( $_GET['pagina_mce'] ); // Usado por la recarga de página
+		$pagina_actual = intval( $_GET['pagina_mce'] );
 	}
 	if ( $pagina_actual < 1 ) { $pagina_actual = 1; }
 
@@ -104,18 +103,11 @@ function mce_render_tabla_shortcode( $atts ) {
 		return '<p>' . esc_html( sprintf( __( 'No se encontraron datos en la tabla "%s".', 'mi-conexion-externa' ), $tabla ) ) . '</p>';
 	}
 
-	// 10. *** ¡NUEVO! Cargar los scripts para AJAX ***
-	// Cargamos el CSS Y el nuevo JS
+	// 10. *** ¡LÓGICA LIMPIADA! ***
+	// Solo llamamos a los scripts. El 'localize' ya se hizo.
 	wp_enqueue_style( 'mce-public-style' );
-	wp_enqueue_script( 'mce-public-script' ); // (Lo crearemos en el prox. paso)
+	wp_enqueue_script( 'mce-public-script' ); 
 	
-	// Le pasamos el Nonce y la URL de AJAX a nuestro JS
-	wp_localize_script( 'mce-public-script', 'mce_ajax_object', array(
-		'ajax_url'   => admin_url( 'admin-ajax.php' ),
-		'nonce'      => wp_create_nonce( 'mce_ajax_nonce' ),
-	) );
-
-
 	// 11. Estilo en línea para columnas
 	$inline_style = sprintf(
 		'grid-template-columns: repeat(%d, 1fr);',
@@ -198,7 +190,7 @@ function mce_render_tabla_shortcode( $atts ) {
 		</div>
 
 		<?php
-		// 14. DIBUJAR LOS ENLACES DE PAGINACIÓN (¡LÓGICA CORREGIDA!)
+		// 14. DIBUJAR LOS ENLACES DE PAGINACIÓN
 		$total_paginas = ceil( $total_filas / $filas_por_pagina );
 
 		if ( $total_paginas > 1 ) {
@@ -216,7 +208,7 @@ function mce_render_tabla_shortcode( $atts ) {
 			echo '</div>';
 		}
 
-		?>
+	?>
 	</div> <?php
 	
 	return ob_get_clean();
@@ -224,18 +216,14 @@ function mce_render_tabla_shortcode( $atts ) {
 
 
 /**
- * *** ¡NUEVO! 4. EL RECEPTOR DE AJAX ***
- *
- * Esta función escucha las peticiones de AJAX desde nuestro JS.
+ * 4. EL RECEPTOR DE AJAX
+ * (Sin cambios)
  */
 function mce_get_page_content_ajax() {
-	// 1. Seguridad: Verificar el Nonce
 	check_ajax_referer( 'mce_ajax_nonce', 'nonce' );
 
-	// 2. Recoger y sanitizar todos los atributos que nos envía el JS
 	$atts = array();
 	
-	// Datos
 	if ( isset( $_POST['tabla'] ) ) { $atts['tabla'] = sanitize_text_field( $_POST['tabla'] ); }
 	if ( isset( $_POST['columnas'] ) ) { $atts['columnas'] = intval( $_POST['columnas'] ); }
 	if ( isset( $_POST['paginacion'] ) ) { $atts['paginacion'] = intval( $_POST['paginacion'] ); }
@@ -244,21 +232,15 @@ function mce_get_page_content_ajax() {
 	if ( isset( $_POST['llave_titulo'] ) ) { $atts['llave_titulo'] = sanitize_text_field( $_POST['llave_titulo'] ); }
 	if ( isset( $_POST['ocultar_etiquetas'] ) ) { $atts['ocultar_etiquetas'] = sanitize_text_field( $_POST['ocultar_etiquetas'] ); }
 	
-	// Estilos
 	if ( isset( $_POST['color_titulo'] ) ) { $atts['color_titulo'] = sanitize_text_field( $_POST['color_titulo'] ); }
 	if ( isset( $_POST['tamano_titulo'] ) ) { $atts['tamano_titulo'] = sanitize_text_field( $_POST['tamano_titulo'] ); }
 	if ( isset( $_POST['color_etiqueta'] ) ) { $atts['color_etiqueta'] = sanitize_text_field( $_POST['color_etiqueta'] ); }
 	if ( isset( $_POST['color_valor'] ) ) { $atts['color_valor'] = sanitize_text_field( $_POST['color_valor'] ); }
 	if ( isset( $_POST['color_enlace'] ) ) { $atts['color_enlace'] = sanitize_text_field( $_POST['color_enlace'] ); }
 	
-
-	// 3. ¡Reutilizar nuestra función de renderizado!
-	// Le pasamos los atributos limpios y nos devuelve el HTML.
 	$html = mce_render_tabla_shortcode( $atts );
 
-	// 4. Devolver el HTML al JavaScript
 	wp_send_json_success( array( 'html' => $html ) );
 }
-// Enganchamos la función para usuarios logueados (wp_ajax_) y visitantes (wp_ajax_nopriv_)
 add_action( 'wp_ajax_mce_get_page_content', 'mce_get_page_content_ajax' );
 add_action( 'wp_ajax_nopriv_mce_get_page_content', 'mce_get_page_content_ajax' );

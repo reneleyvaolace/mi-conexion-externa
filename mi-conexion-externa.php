@@ -2,7 +2,8 @@
 /**
  * Plugin Name:       CoreAura: Conexión Externa
  * Plugin URI:        https://ejemplo.com/mi-conexion-externa
- * Version:           1.1.0
+ * Description:       Conecta WordPress con una base de datos externa para sincronizar contenido.
+ * Version:           1.1.5
  * Author:            CoreAura
  * Author URI:        https://ejemplo.com
  * License:           GPL v2 or later
@@ -18,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Constantes
  */
-define( 'MCE_VERSION', '1.1.0' ); // Versión subida por la nueva feature de AJAX
+define( 'MCE_VERSION', '1.1.5' ); // Versión subida para forzar caché del JS
 define( 'MCE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'MCE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'MCE_PLUGIN_FILE', __FILE__ );
@@ -88,8 +89,8 @@ function mce_load_elementor_pro_integration() {
 }
 
 /**
- * *** ¡FUNCIÓN ACTUALIZADA! ***
- * Registra nuestro CSS y JS por defecto.
+ * *** ¡FUNCIÓN CORREGIDA (Regla 1)! ***
+ * Registra nuestro CSS y JS, y AHORA TAMBIÉN LOCALIZA el script.
  */
 function mce_register_public_scripts() {
 	// Registrar el CSS
@@ -100,12 +101,25 @@ function mce_register_public_scripts() {
 		MCE_VERSION
 	);
 	
-	// *** ¡NUEVO! Registrar el JS ***
+	// Registrar el JS
 	wp_register_script(
-		'mce-public-script', // El "nombre" de nuestro script
+		'mce-public-script',
 		MCE_PLUGIN_URL . 'public/js/mce-public-script.js',
-		array( 'jquery' ), // Dependencia: necesita que WordPress cargue jQuery
+		array( 'jquery' ),
 		MCE_VERSION,
-		true // Cargar en el footer
+		true
+	);
+	
+	// *** ¡LÓGICA CORREGIDA! ***
+	// Adjuntamos el objeto AJAX (Nonce y URL) a nuestro script.
+	// Esto solo se imprimirá en la página si el script
+	// es llamado por wp_enqueue_script() (lo cual hace nuestro shortcode).
+	wp_localize_script(
+		'mce-public-script', // El "handle" del script al que se adjunta
+		'mce_ajax_object',   // El nombre del objeto JS que se creará
+		array(
+			'ajax_url'   => admin_url( 'admin-ajax.php' ),
+			'nonce'      => wp_create_nonce( 'mce_ajax_nonce' ),
+		)
 	);
 }
