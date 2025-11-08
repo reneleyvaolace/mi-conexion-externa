@@ -89,8 +89,9 @@ function mce_load_elementor_pro_integration() {
 }
 
 /**
- * *** ¡FUNCIÓN CORREGIDA (Regla 1)! ***
- * Registra nuestro CSS y JS, y AHORA TAMBIÉN LOCALIZA el script.
+ * *** ¡FUNCIÓN CORREGIDA! ***
+ * Esta función AHORA SÓLO REGISTRA los scripts.
+ * El shortcode los "encolará" y "localizará".
  */
 function mce_register_public_scripts() {
 	// Registrar el CSS
@@ -108,18 +109,5 @@ function mce_register_public_scripts() {
 		array( 'jquery' ),
 		MCE_VERSION,
 		true
-	);
-	
-	// *** ¡LÓGICA CORREGIDA! ***
-	// Adjuntamos el objeto AJAX (Nonce y URL) a nuestro script.
-	// Esto solo se imprimirá en la página si el script
-	// es llamado por wp_enqueue_script() (lo cual hace nuestro shortcode).
-	wp_localize_script(
-		'mce-public-script',
-		'mce_ajax_object',
-		array(
-			'ajax_url'   => admin_url( 'admin-ajax.php' ),
-			'nonce'      => wp_create_nonce( 'mce_ajax_nonce' ),
-		)
 	);
 }
