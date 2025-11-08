@@ -22,7 +22,7 @@ add_action( 'init', 'mce_register_shortcodes' );
 /**
  * 2. LA LÓGICA DE RENDERIZADO DEL SHORTCODE
  *
- * *** ¡CON LÓGICA DE LOCALIZACIÓN CORREGIDA! ***
+ * *** ¡LIMPIADO! Se eliminó la llamada a wp_localize_script. ***
  */
 function mce_render_tabla_shortcode( $atts ) {
 
@@ -103,21 +103,10 @@ function mce_render_tabla_shortcode( $atts ) {
 		return '<p>' . esc_html( sprintf( __( 'No se encontraron datos en la tabla "%s".', 'mi-conexion-externa' ), $tabla ) ) . '</p>';
 	}
 
-	// 10. *** ¡LÓGICA CORREGIDA (Regla 1)! ***
-	// Encolamos los scripts (que ya están registrados)
+	// 10. *** ¡LÓGICA LIMPIADA! ***
+	// Solo llamamos a los scripts. El 'localize' ya se hizo.
 	wp_enqueue_style( 'mce-public-style' );
 	wp_enqueue_script( 'mce-public-script' ); 
-	
-	// Y AHORA, localizamos el script. Esto crea el objeto mce_ajax_object
-	// ANTES de que el script se imprima en el footer.
-	wp_localize_script(
-		'mce-public-script',
-		'mce_ajax_object',
-		array(
-			'ajax_url'   => admin_url( 'admin-ajax.php' ),
-			'nonce'      => wp_create_nonce( 'mce_ajax_nonce' ),
-		)
-	);
 	
 	// 11. Estilo en línea para columnas
 	$inline_style = sprintf(
