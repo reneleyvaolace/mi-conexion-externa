@@ -33,31 +33,26 @@ define( 'MCE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'MCE_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 
 // ===================================
-// SISTEMA DE ACTUALIZACIONES (GitHub)
+// SISTEMA DE ACTUALIZACIONES (GitHub Privado)
 // ===================================
 
 if ( file_exists( MCE_PLUGIN_DIR . 'lib/plugin-update-checker/plugin-update-checker.php' ) ) {
     require_once MCE_PLUGIN_DIR . 'lib/plugin-update-checker/plugin-update-checker.php';
     
-    // La declaración use debe ir justo después del require
     $mceUpdateChecker = YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
-        'https://github.com/TU-USUARIO/coreaura-conexion-externa/', // Cambia TU-USUARIO por tu usuario de GitHub
+        'https://github.com/reneleyvaolace/coreaura-conexion-externa/',
         __FILE__,
         'mi-conexion-externa'
     );
     
-    // Si tu repositorio es PRIVADO, descomenta la siguiente línea y añade tu token personal
-    // $mceUpdateChecker->setAuthentication('ghp_tu_token_personal_aqui');
+    // Token para repositorio privado
+    $mceUpdateChecker->setAuthentication('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');
     
-    // Habilitar el uso de releases de GitHub (recomendado)
+    // Especificar la rama principal
+    $mceUpdateChecker->setBranch('main');
+    
+    // Habilitar releases de GitHub
     $mceUpdateChecker->getVcsApi()->enableReleaseAssets();
-    
-    // Opcional: Añadir filtros de query args (para licencias, site tracking, etc.)
-    // $mceUpdateChecker->addQueryArgFilter(function($queryArgs) {
-    //     $queryArgs['license_key'] = get_option('mce_license_key', '');
-    //     $queryArgs['site_url'] = get_site_url();
-    //     return $queryArgs;
-    // });
 }
 
 // ===================================
