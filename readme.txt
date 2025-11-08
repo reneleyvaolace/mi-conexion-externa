@@ -1,105 +1,111 @@
 === CoreAura: Conexión Externa ===
 Contributors: CoreAura
-Tags: base de datos, integración externa, shortcode, elementor, productos, sincronización, ajax
+Tags: database, external database, mysql, data display, ajax pagination
 Requires at least: 6.0
-Tested up to: 6.6
+Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.1.5
-License: GPLv2 or later
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Stable tag: 1.0.0
+License: Proprietary
+License URI: https://coreaura.com/licencia
 
-Un plugin seguro, robusto y modular desarrollado por CoreAura que conecta WordPress con bases de datos externas (MySQL/MariaDB), ideal para mostrar productos y datos externos, compatible con Elementor Pro y shortcodes dinámicos.
+Plugin profesional para conectar, explorar y mostrar datos de bases de datos externas MySQL/MariaDB con grids personalizables y paginación AJAX.
 
 == Descripción ==
 
-**CoreAura: Conexión Externa** permite a sitios WordPress acceder, consultar y mostrar información automáticamente desde bases de datos externas.  
-Desarrollado profesionalmente por **CoreAura**, este plugin facilita la sincronización, visualización y administración avanzada de productos, reportes, inventarios y más.
+CoreAura: Conexión Externa es un plugin premium diseñado para conectar WordPress con bases de datos externas MySQL/MariaDB, permitiendo mostrar y gestionar información de manera visual y profesional.
 
-- Explorador visual de tablas externas desde el admin
-- Shortcode generador de grids responsivos y paginados
-- Integración nativa con Elementor Pro (loop widgets, grid)
-- Configuración y prueba de conexión vía AJAX seguro
-- Seguridad avanzada con nonces, sanitización y roles admin
-- Estilización y atributos personalizables para frontend
+= Características Principales =
 
-== Instalación y configuración ==
+* **Conexión Segura** - Conecta a bases de datos externas MySQL/MariaDB con validación completa
+* **Explorador Visual** - Navega y visualiza tablas y registros directamente desde el admin
+* **Shortcode Universal** - `[mce_mostrar_tabla]` con múltiples parámetros personalizables
+* **Paginación AJAX** - Navegación fluida sin recarga de página
+* **Panel de Estilos** - Personaliza colores, tamaños y diseño visual desde el admin
+* **Responsive** - Diseño adaptable a todos los dispositivos
+* **Seguro** - Sanitización completa, nonces y validación de permisos
+* **Optimizado** - Carga condicional de assets y consultas eficientes
+* **Integración Total** - Compatible con Gutenberg y Elementor Free
 
-1. Descarga el ZIP/plugin y súbelo a `/wp-content/plugins/` (o clona desde GitHub).
-2. Activa el plugin desde el Panel de Plugins en WordPress.
-3. Dirígete a **CoreAura Conexión > Ajustes** y añade las credenciales de tu base de datos externa.
-4. Guarda y prueba la conexión usando el botón incluido en ajustes (retorna mensajes claros).
-5. Explora las tablas o utiliza el shortcode para mostrar información en cualquier contenido o widget.
+= Casos de Uso =
 
-== Uso de shortcode ==
+* Catálogos de productos desde ERP externo
+* Directorios de empleados o contactos
+* Listados de eventos o registros
+* Inventarios en tiempo real
+* Cualquier información almacenada en MySQL/MariaDB
 
-- Ejemplo básico:
-  `[mce_mostrar_tabla tabla="nombre_tabla"]`
-- Ejemplo avanzado (con atributos de estilo y visualización):
-  `[mce_mostrar_tabla tabla="productos" paginacion="5" columnas="4" llave_titulo="nombre" color_titulo="#2d9cdb"]`
+= Soporte Premium =
 
-**Atributos admitidos:**
-- `tabla`: Nombre de la tabla externa.
-- `paginacion`: Número de filas por página.
-- `columnas`: Grid de 1-6 columnas.
-- `columnas_mostrar`: Lista separada por comas.
-- `llave_titulo`: Columna principal como título.
-- `ocultar_etiquetas`: Oculta etiquetas visuales.
-- `color_titulo`, `tamano_titulo`, `color_etiqueta`, `color_valor`, `color_enlace`: Estilos CSS rápido.
+Este es un plugin comercial con soporte dedicado. Contacta a CoreAura para asistencia técnica, personalizaciones o consultas.
 
-== Integración con Elementor Pro ==
+== Instalación ==
 
-- El plugin registra una nueva fuente de consulta (loop) lista para los widgets Pro.
-- Si Elementor Pro está activo, aparecerán nuevos controles para elegir productos externos.
-- Configura, personaliza y muestra cualquier tabla o reporte en plantillas visuales.
+1. Sube el plugin a la carpeta `/wp-content/plugins/mi-conexion-externa/`
+2. Activa el plugin desde el menú 'Plugins' en WordPress
+3. Ve a 'CoreAura Conexión' > 'Ajustes' y configura las credenciales de tu base de datos
+4. Prueba la conexión y comienza a usar el explorador o el shortcode
 
-== Preguntas frecuencia (FAQ) ==
+= Configuración Básica =
 
-= ¿Pierdo mis credenciales si desactivo el plugin? =
-No. Solo al eliminarlo completamente desde WordPress se borran las credenciales y configuración.
+1. **Ajustes** - Ingresa Host, Puerto, Nombre de BD, Usuario y Contraseña
+2. **Probar Conexión** - Verifica que las credenciales sean correctas
+3. **Explorador** - Navega por las tablas disponibles
+4. **Shortcode** - Usa `[mce_mostrar_tabla tabla="nombre_tabla"]` en cualquier página
 
-= ¿Qué ocurre si cambio de hosting o migración? =
-Solo actualiza el campo de IP/Host en los ajustes. La base de datos externa debe ser accesible desde el nuevo servidor.
+== Preguntas Frecuentes ==
 
-= ¿Puedo visualizar otras tablas externas que no sean productos? =
-Sí, cualquier tabla que el usuario tenga permisos puede ser consultada y mostrada.
+= ¿Funciona con cualquier base de datos MySQL? =
 
-== Contribución y flujo GitHub ==
+Sí, funciona con MySQL y MariaDB. La base de datos puede estar en el mismo servidor o en un servidor remoto.
 
-Este proyecto se administra vía GitHub por el equipo de CoreAura:
-- Branch principal: `main`
-- Branches de desarrollo/features: `develop`, `feature/mi-funcionalidad`
-- Los pull requests deben ser revisados con descripción clara y referencia al issue correspondiente.
-- Las releases públicas deben ir acompañadas de actualización de este `readme.txt` y el changelog.
+= ¿Puedo personalizar los estilos? =
+
+Sí, el plugin incluye un panel completo de estilos en el admin y también acepta atributos de estilo en el shortcode.
+
+= ¿Es compatible con Elementor? =
+
+Sí, funciona perfectamente con Elementor Free usando el widget de Shortcode.
+
+= ¿Necesito conocimientos técnicos? =
+
+No necesariamente. La interfaz es intuitiva, aunque necesitarás las credenciales de tu base de datos externa.
+
+= ¿Afecta el rendimiento? =
+
+No, el plugin está optimizado con paginación, carga condicional y consultas eficientes.
+
+== Capturas de Pantalla ==
+
+1. Panel de ajustes con configuración de conexión
+2. Explorador de tablas con diseño moderno
+3. Visualización de registros en grid con paginación
+4. Panel de personalización de estilos
+5. Ejemplo de shortcode en página con Elementor
 
 == Changelog ==
 
-= 1.1.5 =
-* Integración AJAX y nonces mejorada.
-* Estilos públicos listos para override por temas personalizados.
-* Nueva documentación y secciones de ayuda mejoradas.
+= 1.0.0 - 2025-11-08 =
+* Versión inicial de producción
+* Conexión segura a bases de datos externas MySQL/MariaDB
+* Explorador visual de tablas y registros
+* Shortcode universal con atributos personalizables
+* Paginación AJAX sin recarga
+* Panel de estilos personalizado
+* Integración con Gutenberg y Elementor Free
+* Diseño responsive y moderno
+* Seguridad completa (nonces, sanitización, validación)
+* Documentación completa en sección de Ayuda
 
-= 1.1.4 =
-* Fixes menores internacionales y estilo.
+== Actualización ==
 
-== Licencia y Autores ==
+El plugin incluye un sistema de actualizaciones automáticas. Las nuevas versiones se notificarán en el dashboard de WordPress.
 
-Plugin desarrollado por **CoreAura** — [https://coreaura.com/](https://coreaura.com/)  
-Distribuido bajo licencia GPLv2 o posterior.
+== Licencia y Soporte ==
 
-== Créditos y contacto ==
+Este es un plugin comercial propietario desarrollado por CoreAura. 
+Para soporte técnico, personalizaciones o consultas, contacta:
 
-- Soporte y contacto: soporte@coreaura.com
-- Web principal: [https://coreaura.com/](https://coreaura.com/)
-- Documentación extendida y tutoriales en el admin y en la web oficial.
+* Web: https://coreaura.com
+* Email: soporte@coreaura.com
 
-== Seguridad y buenas prácticas ==
-
-- Todas las acciones AJAX incluyen verificación de nonce y sanitización.
-- Las opciones del plugin solo son accesibles por administradores o roles con `manage_options`.
-- El archivo `uninstall.php` elimina configuraciones y credenciales solo al borrar el plugin (no al desactivarlo).
-
-== Traducción e internacionalización ==
-
-- Aceptamos contribuciones de traducción vía archivos `.pot` en `/languages/`.
-- El plugin está listo para internacionalización desde el primer uso.
-
+Todos los derechos reservados © 2025 CoreAura

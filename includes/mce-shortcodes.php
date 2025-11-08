@@ -96,15 +96,46 @@ function mce_render_tabla_shortcode( $atts ) {
 
     $inline_style = sprintf('grid-template-columns: repeat(%d, 1fr);', $columnas);
 
+    // NUEVO: Lee opciones de estilo del admin
+    $options = get_option('mce_style_settings', array());
+
     $estilo_titulo = '';
-    if ( ! empty( $a['color_titulo'] ) ) { $estilo_titulo .= 'color: ' . esc_attr( $a['color_titulo'] ) . ' !important;'; }
-    if ( ! empty( $a['tamano_titulo'] ) ) { $estilo_titulo .= 'font-size: ' . esc_attr( $a['tamano_titulo'] ) . ' !important;'; }
+    if (!empty($options['color_titulo'])) {
+        $estilo_titulo .= 'color:' . esc_attr($options['color_titulo']) . '!important;';
+    }
+    if (!empty($a['color_titulo'])) {
+        $estilo_titulo .= 'color:' . esc_attr($a['color_titulo']) . '!important;';
+    }
+    if (!empty($options['tamano_titulo'])) {
+        $estilo_titulo .= 'font-size:' . esc_attr($options['tamano_titulo']) . '!important;';
+    }
+    if (!empty($a['tamano_titulo'])) {
+        $estilo_titulo .= 'font-size:' . esc_attr($a['tamano_titulo']) . '!important;';
+    }
+
     $estilo_etiqueta = '';
-    if ( ! empty( $a['color_etiqueta'] ) ) { $estilo_etiqueta .= 'color: ' . esc_attr( $a['color_etiqueta'] ) . ' !important;'; }
+    if (!empty($options['color_etiqueta'])) {
+        $estilo_etiqueta .= 'color:' . esc_attr($options['color_etiqueta']) . '!important;';
+    }
+    if (!empty($a['color_etiqueta'])) {
+        $estilo_etiqueta .= 'color:' . esc_attr($a['color_etiqueta']) . '!important;';
+    }
+
     $estilo_valor = '';
-    if ( ! empty( $a['color_valor'] ) ) { $estilo_valor .= 'color: ' . esc_attr( $a['color_valor'] ) . ' !important;'; }
+    if (!empty($options['color_valor'])) {
+        $estilo_valor .= 'color:' . esc_attr($options['color_valor']) . '!important;';
+    }
+    if (!empty($a['color_valor'])) {
+        $estilo_valor .= 'color:' . esc_attr($a['color_valor']) . '!important;';
+    }
+
     $estilo_enlace = '';
-    if ( ! empty( $a['color_enlace'] ) ) { $estilo_enlace .= 'color: ' . esc_attr( $a['color_enlace'] ) . ' !important;'; }
+    if (!empty($options['color_enlace'])) {
+        $estilo_enlace .= 'color:' . esc_attr($options['color_enlace']) . '!important;';
+    }
+    if (!empty($a['color_enlace'])) {
+        $estilo_enlace .= 'color:' . esc_attr($a['color_enlace']) . '!important;';
+    }
 
     ob_start();
     ?>
@@ -128,7 +159,7 @@ function mce_render_tabla_shortcode( $atts ) {
                 <div class="mce-producto-card">
                     <?php
                     if ( ! empty( $llave_titulo ) && isset( $row[ $llave_titulo ] ) ) {
-                        echo '<h3 class="mce-card-title" style="' . esc_attr( $estilo_titulo ) . '">' . esc_html( $row[ $llave_titulo ] ) . '</h3>';
+                        echo '<h3 class="mce-card-title" style="' . esc_attr($estilo_titulo) . '">' . esc_html( $row[ $llave_titulo ] ) . '</h3>';
                     }
 
                     echo '<div class="mce-card-meta">';
@@ -145,15 +176,15 @@ function mce_render_tabla_shortcode( $atts ) {
                         ?>
                         <div class="<?php echo esc_attr( $clase_css_item ); ?>">
                             <?php if ( $mostrar_etiqueta ) : ?>
-                                <strong style="<?php echo esc_attr( $estilo_etiqueta ); ?>"><?php echo esc_html( $key ); ?>:</strong>
+                                <strong style="<?php echo esc_attr($estilo_etiqueta); ?>"><?php echo esc_html( $key ); ?>:</strong>
                             <?php endif; ?>
                             
-                            <span style="<?php echo esc_attr( $estilo_valor ); ?>">
+                            <span style="<?php echo esc_attr($estilo_valor); ?>">
                                 <?php
                                 $clean_value = trim( (string) $value );
                                 if ( str_starts_with( $clean_value, 'http' ) && str_ends_with( strtolower( $clean_value ), '.pdf' ) ) {
                                     ?>
-                                    <a href="<?php echo esc_url( $clean_value ); ?>" target="_blank" rel="noopener noreferrer" class="mce-pdf-link" style="<?php echo esc_attr( $estilo_enlace ); ?>">
+                                    <a href="<?php echo esc_url( $clean_value ); ?>" target="_blank" rel="noopener noreferrer" class="mce-pdf-link" style="<?php echo esc_attr($estilo_enlace); ?>">
                                         <?php echo esc_html( __( 'Ver PDF', 'mi-conexion-externa' ) ); ?>
                                     </a>
                                     <?php
@@ -170,7 +201,6 @@ function mce_render_tabla_shortcode( $atts ) {
         </div>
 
         <?php
-        // PAGINACIÓN CON ANTERIOR Y SIGUIENTE VISIBLES SEGÚN CORRESPONDA
         $total_paginas = ceil( $total_filas / $filas_por_pagina );
 
         if ( $total_paginas > 1 ) {
@@ -203,7 +233,6 @@ function mce_render_tabla_shortcode( $atts ) {
  * AJAX Handler
  */
 function mce_get_page_content_ajax() {
-    // Log de depuración para verificar el parámetro recibido
     error_log('AJAX Pagina solicitada: ' . print_r($_POST['pagina'], true));
 
     check_ajax_referer( 'mce_ajax_nonce', 'nonce' );

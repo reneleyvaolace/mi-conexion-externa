@@ -1,0 +1,32 @@
+LICENCIA DE SOFTWARE PROPIETARIO
+CoreAura: Conexión Externa
+
+Copyright (c) 2025 CoreAura. Todos los derechos reservados.
+
+TÉRMINOS Y CONDICIONES
+
+1. CONCESIÓN DE LICENCIA
+   CoreAura le concede una licencia no exclusiva, intransferible y limitada para 
+   usar este software en un (1) sitio web por cada licencia adquirida.
+
+2. RESTRICCIONES
+   Usted NO puede:
+   - Redistribuir, vender o arrendar el software
+   - Modificar, descompilar o realizar ingeniería inversa
+   - Usar el software en más sitios de los permitidos por su licencia
+   - Eliminar avisos de copyright o propiedad intelectual
+
+3. SOPORTE Y ACTUALIZACIONES
+   - Soporte técnico incluido durante el período de licencia activa
+   - Actualizaciones automáticas mientras la licencia esté vigente
+
+4. GARANTÍA LIMITADA
+   El software se proporciona "tal cual" sin garantías de ningún tipo.
+
+5. LIMITACIÓN DE RESPONSABILIDAD
+   CoreAura no será responsable por daños derivados del uso del software.
+
+6. TERMINACIÓN
+   Esta licencia termina automáticamente si viola cualquier término.
+
+Para consultas sobre licencias: licencias@coreaura.com

@@ -1,310 +1,139 @@
 <?php
 /**
- * Lógica para la Página de Ajustes del Administrador.
+ * Página de Ajustes para CoreAura: Conexión Externa
  *
  * @package MiConexionExterna
  */
 
-// Regla 1: Mejor Práctica de Seguridad. Evitar acceso directo.
 if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+    exit;
 }
 
-/**
- * Clase MCE_Settings_Page
- *
- * Esta clase ahora solo registra los campos y dibuja la página.
- * Los hooks 'admin_menu' se han movido al cargador principal.
- */
 class MCE_Settings_Page {
 
-	/**
-	 * Almacena los valores de nuestras opciones.
-	 *
-	 * @var array
-	 */
-	private $options;
+    public function __construct() {
+        add_action( 'admin_init', array( $this, 'register_settings' ) );
+        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+    }
 
-	/**
-	 * Constructor.
-	 *
-	 * Registra los hooks para los campos, AJAX y scripts.
-	 */
-	public function __construct() {
-		// Hook para registrar nuestros ajustes.
-		add_action( 'admin_init', array( $this, 'register_and_build_fields' ) );
+    public function enqueue_scripts( $hook ) {
+        if ( strpos( $hook, 'mce-settings' ) === false ) {
+            return;
+        }
 
-		// Hook para cargar scripts JS/CSS solo en nuestra página.
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
+        wp_enqueue_style(
+            'mce-admin-global',
+            plugins_url( 'admin/css/mce-admin-global.css', dirname( dirname( __FILE__ ) ) . '/mi-conexion-externa.php' ),
+            array(),
+            '1.1.5'
+        );
 
-		// Hook para el receptor de la prueba de conexión AJAX.
-		add_action( 'wp_ajax_mce_test_connection', array( $this, 'handle_ajax_test_connection' ) );
-	}
+        wp_enqueue_script(
+            'mce-admin-script',
+            plugins_url( 'admin/js/mce-admin-script.js', dirname( dirname( __FILE__ ) ) . '/mi-conexion-externa.php' ),
+            array( 'jquery' ),
+            '1.1.5',
+            true
+        );
 
-	/**
-	 * Carga y localiza scripts solo en nuestra página de ajustes.
-	 *
-	 * @param string $hook_suffix El sufijo de la página de admin actual.
-	 */
-	public function enqueue_admin_scripts( $hook_suffix ) {
-		// Comprueba si estamos en nuestra página de ajustes.
-		// El hook para un submenú es 'toplevel_page_[slug_padre]_page_[slug_hijo]'
-		if ( 'conexion-externa_page_mce-settings' !== $hook_suffix ) {
-			return;
-		}
+        wp_localize_script(
+            'mce-admin-script',
+            'mce_ajax_object',
+            array(
+                'ajax_url'     => admin_url( 'admin-ajax.php' ),
+                'test_nonce'   => wp_create_nonce( 'mce_test_nonce' ),
+                'testing_text' => __( 'Probando conexión...', 'mi-conexion-externa' ),
+                'error_text'   => __( 'Error de comunicación con el servidor.', 'mi-conexion-externa' )
+            )
+        );
+    }
 
-		// Registramos nuestro script.
-		$script_path = MCE_PLUGIN_DIR . 'admin/js/mce-admin-script.js';
-		$script_asset_path = MCE_PLUGIN_DIR . 'admin/js/mce-admin-script.asset.php';
-		$version = MCE_VERSION;
-		$dependencies = array( 'jquery' ); 
+    public function register_settings() {
+        register_setting( 'mce_settings', 'mce_db_host', array( 'sanitize_callback' => 'sanitize_text_field' ) );
+        register_setting( 'mce_settings', 'mce_db_port', array( 'sanitize_callback' => 'absint' ) );
+        register_setting( 'mce_settings', 'mce_db_name', array( 'sanitize_callback' => 'sanitize_text_field' ) );
+        register_setting( 'mce_settings', 'mce_db_user', array( 'sanitize_callback' => 'sanitize_text_field' ) );
+        register_setting( 'mce_settings', 'mce_db_pass', array( 'sanitize_callback' => 'sanitize_text_field' ) );
 
-		if ( file_exists( $script_asset_path ) ) {
-			$asset_file = include $script_asset_path;
-			$version = $asset_file['version'];
-			$dependencies = $asset_file['dependencies'];
-		}
+        add_settings_section(
+            'mce_db_section',
+            __( 'Credenciales de Base de Datos Externa', 'mi-conexion-externa' ),
+            array( $this, 'section_description' ),
+            'mce-settings'
+        );
 
-		wp_enqueue_script(
-			'mce-admin-script',
-			MCE_PLUGIN_URL . 'admin/js/mce-admin-script.js',
-			$dependencies,
-			$version,
-			true // Cargar en el footer.
-		);
+        add_settings_field( 'mce_db_host', __( 'Host / IP', 'mi-conexion-externa' ), array( $this, 'render_text_field' ), 'mce-settings', 'mce_db_section', array( 'id' => 'mce_db_host', 'placeholder' => 'localhost o 192.168.1.100' ) );
+        add_settings_field( 'mce_db_port', __( 'Puerto', 'mi-conexion-externa' ), array( $this, 'render_text_field' ), 'mce-settings', 'mce_db_section', array( 'id' => 'mce_db_port', 'placeholder' => '3306' ) );
+        add_settings_field( 'mce_db_name', __( 'Nombre de la Base de Datos', 'mi-conexion-externa' ), array( $this, 'render_text_field' ), 'mce-settings', 'mce_db_section', array( 'id' => 'mce_db_name', 'placeholder' => 'mi_base_datos' ) );
+        add_settings_field( 'mce_db_user', __( 'Usuario', 'mi-conexion-externa' ), array( $this, 'render_text_field' ), 'mce-settings', 'mce_db_section', array( 'id' => 'mce_db_user', 'placeholder' => 'usuario_db' ) );
+        add_settings_field( 'mce_db_pass', __( 'Contraseña', 'mi-conexion-externa' ), array( $this, 'render_password_field' ), 'mce-settings', 'mce_db_section', array( 'id' => 'mce_db_pass' ) );
+    }
 
-		// Pasamos datos de PHP a JS (Nonce y URL de AJAX).
-		wp_localize_script(
-			'mce-admin-script',
-			'mce_ajax_object', // Nombre del objeto JS.
-			array(
-				'ajax_url'    => admin_url( 'admin-ajax.php' ),
-				'test_nonce'  => wp_create_nonce( 'mce_test_nonce' ),
-				'testing_text' => __( 'Probando conexión...', 'mi-conexion-externa' ),
-				'error_text'   => __( 'Error. Revisa la consola.', 'mi-conexion-externa' ),
-			)
-		);
-	}
+    public function section_description() {
+        echo '<p>' . esc_html__( 'Configure los datos de acceso a su base de datos externa MySQL/MariaDB.', 'mi-conexion-externa' ) . '</p>';
+    }
 
-	/**
-	 * Renderiza el contenido HTML de la página de ajustes.
-	 */
-	public function create_settings_page_content() {
-		$this->options = get_option( 'mce_db_settings' );
-		?>
-		<div class="wrap">
-			<h2><?php echo esc_html( __( 'Ajustes de Conexión a Base de Datos Externa', 'mi-conexion-externa' ) ); ?></h2>
-			
-			<div id="mce-test-connection-notice" class="notice" style="display:none; margin-left: 0;"></div>
+    public function render_text_field( $args ) {
+        $id = $args['id'];
+        $value = get_option( $id, '' );
+        $placeholder = isset( $args['placeholder'] ) ? $args['placeholder'] : '';
+        printf( '<input type="text" id="%s" name="%s" value="%s" placeholder="%s" class="regular-text" />', esc_attr( $id ), esc_attr( $id ), esc_attr( $value ), esc_attr( $placeholder ) );
+    }
 
-			<form method="post" action="options.php">
-				<?php
-				settings_fields( 'mce_db_settings_group' );
-				do_settings_sections( 'mce-settings-admin' );
-				submit_button();
-				?>
-			</form>
+    public function render_password_field( $args ) {
+        $id = $args['id'];
+        $value = get_option( $id, '' );
+        printf( '<input type="password" id="%s" name="%s" value="%s" class="regular-text" />', esc_attr( $id ), esc_attr( $id ), esc_attr( $value ) );
+    }
 
-			<p>
-				<button type="button" id="mce-test-connection-btn" class="button button-secondary">
-					<?php echo esc_html( __( 'Probar Conexión a BBDD', 'mi-conexion-externa' ) ); ?>
-				</button>
-				<span class="spinner" style="float: none; vertical-align: middle;"></span>
-			</p>
+    public function create_settings_page_content() {
+        ?>
+        <div class="wrap mce-admin-page">
+            <h1><?php esc_html_e( 'Ajustes de Conexión Externa', 'mi-conexion-externa' ); ?></h1>
+            <form method="post" action="options.php">
+                <?php
+                    settings_fields( 'mce_settings' );
+                    do_settings_sections( 'mce-settings' );
+                    submit_button( __( 'Guardar cambios', 'mi-conexion-externa' ) );
+                ?>
+            </form>
 
-		</div>
-		<?php
-	}
-
-	/**
-	 * Registra las secciones y campos usando la Settings API.
-	 */
-	public function register_and_build_fields() {
-		register_setting(
-			'mce_db_settings_group',
-			'mce_db_settings',
-			array( $this, 'sanitize_settings' )
-		);
-
-		add_settings_section(
-			'mce_db_credentials_section',
-			__( 'Credenciales de la Base de Datos', 'mi-conexion-externa' ),
-			array( $this, 'print_section_info' ),
-			'mce-settings-admin'
-		);
-
-		add_settings_field(
-			'mce_db_ip',
-			__( 'IP o Host', 'mi-conexion-externa' ),
-			array( $this, 'db_ip_callback' ),
-			'mce-settings-admin',
-			'mce_db_credentials_section'
-		);
-
-		add_settings_field(
-			'mce_db_port',
-			__( 'Puerto', 'mi-conexion-externa' ),
-			array( $this, 'db_port_callback' ),
-			'mce-settings-admin',
-			'mce_db_credentials_section'
-		);
-
-		add_settings_field(
-			'mce_db_name',
-			__( 'Nombre de la Base de Datos', 'mi-conexion-externa' ),
-			array( $this, 'db_name_callback' ),
-			'mce-settings-admin',
-			'mce_db_credentials_section'
-		);
-
-		add_settings_field(
-			'mce_db_user',
-			__( 'Usuario', 'mi-conexion-externa' ),
-			array( $this, 'db_user_callback' ),
-			'mce-settings-admin',
-			'mce_db_credentials_section'
-		);
-
-		add_settings_field(
-			'mce_db_pass',
-			__( 'Contraseña', 'mi-conexion-externa' ),
-			array( $this, 'db_pass_callback' ),
-			'mce-settings-admin',
-			'mce_db_credentials_section'
-		);
-	}
-
-	/**
-	 * Callback para sanitizar CADA campo antes de guardarlo.
-	 * (Sin cambios)
-	 */
-	public function sanitize_settings( $input ) {
-		$sanitized_input = array();
-
-		if ( isset( $input['mce_db_ip'] ) ) {
-			$sanitized_input['mce_db_ip'] = sanitize_text_field( $input['mce_db_ip'] );
-		}
-		if ( isset( $input['mce_db_port'] ) ) {
-			$sanitized_input['mce_db_port'] = intval( $input['mce_db_port'] );
-		}
-		if ( isset( $input['mce_db_name'] ) ) {
-			$sanitized_input['mce_db_name'] = sanitize_text_field( $input['mce_db_name'] );
-		}
-		if ( isset( $input['mce_db_user'] ) ) {
-			$sanitized_input['mce_db_user'] = sanitize_text_field( $input['mce_db_user'] );
-		}
-		if ( isset( $input['mce_db_pass'] ) ) {
-			if ( ! empty( $input['mce_db_pass'] ) ) {
-				$sanitized_input['mce_db_pass'] = sanitize_text_field( $input['mce_db_pass'] );
-			} else {
-				$sanitized_input['mce_db_pass'] = '';
-			}
-		}
-
-		return $sanitized_input;
-	}
-
-
-	/**
-	 * Callbacks de campos (sin cambios).
-	 */
-	public function print_section_info() {
-		echo esc_html( __( 'Introduce las credenciales para la conexión directa a la base de datos.', 'mi-conexion-externa' ) );
-	}
-	public function db_ip_callback() {
-		$value = isset( $this->options['mce_db_ip'] ) ? esc_attr( $this->options['mce_db_ip'] ) : '';
-		printf( '<input type="text" id="mce_db_ip" name="mce_db_settings[mce_db_ip]" value="%s" class="regular-text" />', $value );
-	}
-	public function db_port_callback() {
-		$value = isset( $this->options['mce_db_port'] ) ? esc_attr( $this->options['mce_db_port'] ) : '3306';
-		printf( '<input type="number" id="mce_db_port" name="mce_db_settings[mce_db_port]" value="%s" class="small-text" />', $value );
-		echo ' <p class="description" style="display:inline-block">' . esc_html__( '(Ej. 3306 para MySQL por defecto)', 'mi-conexion-externa' ) . '</p>';
-	}
-	public function db_name_callback() {
-		$value = isset( $this->options['mce_db_name'] ) ? esc_attr( $this->options['mce_db_name'] ) : '';
-		printf( '<input type="text" id="mce_db_name" name="mce_db_settings[mce_db_name]" value="%s" class="regular-text" />', $value );
-	}
-	public function db_user_callback() {
-		$value = isset( $this->options['mce_db_user'] ) ? esc_attr( $this->options['mce_db_user'] ) : '';
-		printf( '<input type="text" id="mce_db_user" name="mce_db_settings[mce_db_user]" value="%s" class="regular-text" />', $value );
-	}
-	public function db_pass_callback() {
-		$value = isset( $this->options['mce_db_pass'] ) ? esc_attr( $this->options['mce_db_pass'] ) : '';
-		printf( '<input type="password" id="mce_db_pass" name="mce_db_settings[mce_db_pass]" value="%s" class="regular-text" />', $value );
-	}
-
-
-	/**
-	 * Función de prueba de conexión AJAX.
-	 * (Sin cambios)
-	 */
-	public function handle_ajax_test_connection() {
-		// 1. Seguridad: Verificar el Nonce.
-		check_ajax_referer( 'mce_test_nonce', 'security' );
-
-		// 2. Obtener las credenciales guardadas.
-		$opts = get_option( 'mce_db_settings' );
-
-		// 3. Validar que los campos existan.
-		if ( empty( $opts['mce_db_ip'] ) || empty( $opts['mce_db_port'] ) || empty( $opts['mce_db_name'] ) || empty( $opts['mce_db_user'] ) ) {
-			wp_send_json_error(
-				array(
-					'message' => __( 'Error: Faltan credenciales. Por favor, rellena todos los campos (IP, Puerto, Nombre de BBDD, Usuario) y guarda los ajustes primero.', 'mi-conexion-externa' ),
-				)
-			);
-		}
-
-		// 4. Intentar la conexión.
-		$host = $opts['mce_db_ip'] . ':' . $opts['mce_db_port'];
-		mysqli_report( MYSQLI_REPORT_OFF ); // Suprimir excepciones.
-
-		$link = @mysqli_connect(
-			$host,
-			$opts['mce_db_user'],
-			$opts['mce_db_pass'],
-			$opts['mce_db_name']
-		);
-
-		// 5. Devolver la respuesta JSON.
-		if ( ! $link ) {
-			// Lógica de errores mejorada (sin cambios)
-			$raw_error_message = mysqli_connect_error();
-			$friendly_message = '';
-			$solution_message = '';
-
-			if ( strpos( $raw_error_message, 'is blocked because of many connection errors' ) !== false ) {
-				$friendly_message = __( 'FALLO LA CONEXIÓN (Servidor Bloqueado)', 'mi-conexion-externa' );
-				$solution_message = __( '<strong>Posible Solución:</strong> El servidor de la base de datos ha bloqueado tu IP (la de este sitio web) debido a múltiples intentos fallidos. Debes contactar al administrador de esa base de datos y pedirle que ejecute el comando <code>mysqladmin flush-hosts</code> o la consulta SQL <code>FLUSH HOSTS;</code> para desbloquearla.', 'mi-conexion-externa' );
-			} elseif ( strpos( $raw_error_message, 'Access denied for user' ) !== false ) {
-				$friendly_message = __( 'FALLO LA CONEXIÓN (Acceso Denegado)', 'mi-conexion-externa' );
-				$solution_message = __( '<strong>Posible Solución:</strong> El usuario o la contraseña son incorrectos. Verifícalos y vuelve a intentarlo.', 'mi-conexion-externa' );
-			} elseif ( strpos( $raw_error_message, 'Unknown database' ) !== false ) {
-				$friendly_message = __( 'FALLO LA CONEXIÓN (Base de Datos no encontrada)', 'mi-conexion-externa' );
-				$solution_message = __( '<strong>Posible Solución:</strong> El nombre de la base de datos es incorrecto o no existe. Verifica que esté bien escrito.', 'mi-conexion-externa' );
-			} elseif ( strpos( $raw_error_message, 'Can\'t connect to MySQL server' ) !== false || strpos( $raw_error_message, 'Connection timed out' ) !== false ) {
-				$friendly_message = __( 'FALLO LA CONEXIÓN (No se puede alcanzar el servidor)', 'mi-conexion-externa' );
-				$solution_message = __( '<strong>Posible Solución:</strong> Verifica la IP y el Puerto. Si son correctos, es muy probable que un <strong>Firewall</strong> esté bloqueando la conexión. Asegúrate de que el servidor de la BBDD permite conexiones remotas desde la IP de este sitio web.', 'mi-conexion-externa' );
-			} else {
-				$friendly_message = __( 'FALLO LA CONEXIÓN (Error Desconocido)', 'mi-conexion-externa' );
-				$solution_message = __( '<strong>Mensaje Original:</strong>', 'mi-conexion-externa' ) . ' ' . esc_html( $raw_error_message );
-			}
-
-			$final_message = $friendly_message . '<br>' . $solution_message;
-
-			wp_send_json_error(
-				array(
-					'message' => $final_message,
-				)
-			);
-
-		} else {
-			// La conexión fue exitosa.
-			mysqli_close( $link );
-			wp_send_json_success(
-				array(
-					'message' => __( '¡Éxito! Conexión a la base de datos establecida correctamente.', 'mi-conexion-externa' ),
-				)
-			);
-		}
-	}
+            <hr style="margin: 30px 0;">
+            
+            <div class="mce-section">
+                <h2><?php esc_html_e( 'Prueba tu conexión a la base de datos', 'mi-conexion-externa' ); ?></h2>
+                <p><?php esc_html_e( 'Haz clic para verificar que las credenciales funcionan correctamente.', 'mi-conexion-externa' ); ?></p>
+                <button id="mce-test-connection-btn" class="button button-secondary" type="button">
+                    <?php esc_html_e( 'Probar Conexión a BBDD', 'mi-conexion-externa' ); ?>
+                </button>
+                <span class="spinner" style="float:none; margin: 0 10px;"></span>
+                <div id="mce-test-connection-notice" class="notice" style="display:none; margin-top:15px;"></div>
+            </div>
+        </div>
+        <?php
+    }
 }
+
+function mce_test_connection_ajax() {
+    check_ajax_referer( 'mce_test_nonce', 'security' );
+
+    $host = get_option( 'mce_db_host', '' );
+    $port = get_option( 'mce_db_port', '3306' );
+    $name = get_option( 'mce_db_name', '' );
+    $user = get_option( 'mce_db_user', '' );
+    $pass = get_option( 'mce_db_pass', '' );
+
+    if ( empty( $host ) || empty( $name ) || empty( $user ) ) {
+        wp_send_json_error( array( 'message' => __( 'Por favor, complete todos los campos de conexión primero.', 'mi-conexion-externa' ) ) );
+    }
+
+    $mysqli = @new mysqli( $host, $user, $pass, $name, $port );
+
+    if ( $mysqli->connect_errno ) {
+        wp_send_json_error( array( 'message' => sprintf( __( 'Error de conexión: %s', 'mi-conexion-externa' ), $mysqli->connect_error ) ) );
+    } else {
+        $mysqli->close();
+        wp_send_json_success( array( 'message' => __( '¡Éxito! Conexión establecida correctamente.', 'mi-conexion-externa' ) ) );
+    }
+}
+add_action( 'wp_ajax_mce_test_connection', 'mce_test_connection_ajax' );
