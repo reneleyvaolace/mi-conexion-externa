@@ -3,7 +3,7 @@
  * Plugin Name:       CoreAura: Conexión Externa
  * Plugin URI:        https://ejemplo.com/mi-conexion-externa
  * Description:       Conecta WordPress con una base de datos externa para sincronizar contenido.
- * Version:           1.1.6
+ * Version:           1.1.5
  * Author:            CoreAura
  * Author URI:        https://ejemplo.com
  * License:           GPL v2 or later
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Constantes
  */
-define( 'MCE_VERSION', '1.1.6' ); // Versión subida para forzar caché del JS
+define( 'MCE_VERSION', '1.1.5' ); // Versión subida para forzar caché del JS
 define( 'MCE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'MCE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'MCE_PLUGIN_FILE', __FILE__ );
