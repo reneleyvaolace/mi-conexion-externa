@@ -21,6 +21,8 @@ add_action( 'init', 'mce_register_shortcodes' );
 
 /**
  * 2. LA LÓGICA DE RENDERIZADO DEL SHORTCODE
+ *
+ * *** ¡LIMPIADO! Se eliminó la llamada a wp_localize_script. ***
  */
 function mce_render_tabla_shortcode( $atts ) {
 
@@ -32,12 +34,15 @@ function mce_render_tabla_shortcode( $atts ) {
 	// 2. Parsear atributos
 	$a = shortcode_atts(
 		array(
+			// Control de Datos
 			'tabla'             => '',
 			'columnas'          => 3,
 			'paginacion'        => 10,
 			'columnas_mostrar'  => '',
 			'llave_titulo'      => '',
 			'ocultar_etiquetas' => '',
+			
+			// Control de Estilos
 			'color_titulo'      => '',
 			'tamano_titulo'     => '',
 			'color_etiqueta'    => '',
@@ -98,17 +103,10 @@ function mce_render_tabla_shortcode( $atts ) {
 		return '<p>' . esc_html( sprintf( __( 'No se encontraron datos en la tabla "%s".', 'mi-conexion-externa' ), $tabla ) ) . '</p>';
 	}
 
-	// 10. Encolar y Localizar (¡Lógica corregida!)
+	// 10. *** ¡LÓGICA LIMPIADA! ***
+	// Solo llamamos a los scripts. El 'localize' ya se hizo.
 	wp_enqueue_style( 'mce-public-style' );
 	wp_enqueue_script( 'mce-public-script' ); 
-	wp_localize_script(
-		'mce-public-script',
-		'mce_ajax_object',
-		array(
-			'ajax_url'   => admin_url( 'admin-ajax.php' ),
-			'nonce'      => wp_create_nonce( 'mce_ajax_nonce' ), // *** ¡EL NOMBRE ES 'mce_ajax_nonce'! ***
-		)
-	);
 	
 	// 11. Estilo en línea para columnas
 	$inline_style = sprintf(
@@ -219,10 +217,9 @@ function mce_render_tabla_shortcode( $atts ) {
 
 /**
  * 4. EL RECEPTOR DE AJAX
+ * (Sin cambios)
  */
 function mce_get_page_content_ajax() {
-	// *** ¡LÍNEA CORREGIDA! ***
-	// Comprobar el nombre de nonce correcto y la clave 'nonce'.
 	check_ajax_referer( 'mce_ajax_nonce', 'nonce' );
 
 	$atts = array();
