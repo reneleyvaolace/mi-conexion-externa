@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Constantes
  */
-define( 'MCE_VERSION', '1.1.5' ); // Versión subida para forzar caché del JS
+define( 'MCE_VERSION', '1.1.5' );
 define( 'MCE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'MCE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'MCE_PLUGIN_FILE', __FILE__ );
@@ -89,8 +89,7 @@ function mce_load_elementor_pro_integration() {
 }
 
 /**
- * *** ¡FUNCIÓN CORREGIDA (Regla 1)! ***
- * Registra nuestro CSS y JS, y AHORA TAMBIÉN LOCALIZA el script.
+ * Registra nuestro CSS y JS, y localiza el script.
  */
 function mce_register_public_scripts() {
 	// Registrar el CSS
@@ -110,16 +109,13 @@ function mce_register_public_scripts() {
 		true
 	);
 	
-	// *** ¡LÓGICA CORREGIDA! ***
 	// Adjuntamos el objeto AJAX (Nonce y URL) a nuestro script.
-	// Esto solo se imprimirá en la página si el script
-	// es llamado por wp_enqueue_script() (lo cual hace nuestro shortcode).
 	wp_localize_script(
 		'mce-public-script',
 		'mce_ajax_object',
 		array(
 			'ajax_url'   => admin_url( 'admin-ajax.php' ),
-			'nonce'      => wp_create_nonce( 'mce_ajax_nonce' ),
+			'nonce'      => wp_create_nonce( 'mce_ajax_nonce' ), // *** ¡EL NOMBRE ES 'mce_ajax_nonce'! ***
 		)
 	);
 }
