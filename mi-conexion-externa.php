@@ -2,17 +2,27 @@
 /**
  * Plugin Name: CoreAura: Conexión Externa
  * Plugin URI: https://coreaura.com/plugins/conexion-externa
- * Description: Plugin profesional para conectar bases de datos externas MySQL/MariaDB y mostrar información con grids personalizables, paginación AJAX y panel de estilos visual.
- * Version: 1.0.0
+ * Description: Plugin profesional para conectar bases de datos externas MySQL/MariaDB y mostrar información con grids personalizables, búsqueda en tiempo real, filtros AJAX, paginación y panel de estilos visual.
+ * Version: 1.2.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: CoreAura
  * Author URI: https://coreaura.com
- * License: Proprietary
- * License URI: https://coreaura.com/licencia
+ * License: GPL v2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: mi-conexion-externa
  * Domain Path: /languages
- * 
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
  * @package MiConexionExterna
  * @author CoreAura
  * @copyright 2025 CoreAura
@@ -26,11 +36,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 // CONSTANTES DEL PLUGIN
 // ===================================
 
-define( 'MCE_VERSION', '1.0.0' );
+define( 'MCE_VERSION', '1.2.0' );
 define( 'MCE_PLUGIN_FILE', __FILE__ );
 define( 'MCE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'MCE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'MCE_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
+
+// ===================================
+// FIX PARA MYSQL STRICT MODE
+// ===================================
+
+if ( file_exists( MCE_PLUGIN_DIR . 'mce-fix-postmeta.php' ) ) {
+    require_once MCE_PLUGIN_DIR . 'mce-fix-postmeta.php';
+}
 
 // ===================================
 // SISTEMA DE ACTUALIZACIONES (GitHub Privado)
@@ -90,6 +108,7 @@ if ( is_admin() ) {
     require_once MCE_PLUGIN_DIR . 'admin/class-mce-help-page.php';
     require_once MCE_PLUGIN_DIR . 'admin/class-mce-style-settings-page.php';
     require_once MCE_PLUGIN_DIR . 'admin/class-mce-admin-loader.php';
+    require_once MCE_PLUGIN_DIR . 'admin/class-mce-strict-mode-fix.php';
     
     // Inicializar páginas
     $mce_query_page = new MCE_Query_Page();

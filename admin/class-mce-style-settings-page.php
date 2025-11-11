@@ -62,7 +62,7 @@ class MCE_Style_Settings_Page {
         
         add_settings_section(
             'mce_style_section',
-            __( 'Personalización Visual de Grids y Tarjetas', 'mi-conexion-externa' ),
+            __( 'Personalización Visual Completa (Cards + Búsqueda)', 'mi-conexion-externa' ),
             array( $this, 'section_description' ),
             'mce-style-settings'
         );
@@ -86,6 +86,7 @@ class MCE_Style_Settings_Page {
 
     public function get_style_fields() {
         return array(
+            // Cards and Content Styles
             'color_titulo' => array(
                 'label' => __( 'Color de Título', 'mi-conexion-externa' ),
                 'type'  => 'color',
@@ -121,6 +122,106 @@ class MCE_Style_Settings_Page {
                 'type'  => 'text',
                 'desc'  => __( 'CSS box-shadow (ej. 0 4px 12px rgba(0,0,0,0.05))', 'mi-conexion-externa' ),
             ),
+            
+            // Search Section Styles
+            'color_fondo_buscador' => array(
+                'label' => __( 'Color de Fondo del Buscador', 'mi-conexion-externa' ),
+                'type'  => 'color',
+                'desc'  => __( 'Color de fondo del contenedor de búsqueda y filtros', 'mi-conexion-externa' ),
+            ),
+            'borde_buscador' => array(
+                'label' => __( 'Color de Borde del Buscador', 'mi-conexion-externa' ),
+                'type'  => 'color',
+                'desc'  => __( 'Color del borde del contenedor de búsqueda', 'mi-conexion-externa' ),
+            ),
+            
+            // Search Input Styles
+            'color_texto_busqueda' => array(
+                'label' => __( 'Color de Texto en Búsqueda', 'mi-conexion-externa' ),
+                'type'  => 'color',
+                'desc'  => __( 'Color del texto en el campo de búsqueda', 'mi-conexion-externa' ),
+            ),
+            'color_fondo_input' => array(
+                'label' => __( 'Color de Fondo de Input', 'mi-conexion-externa' ),
+                'type'  => 'color',
+                'desc'  => __( 'Color de fondo del campo de búsqueda', 'mi-conexion-externa' ),
+            ),
+            'color_borde_input' => array(
+                'label' => __( 'Color de Borde de Input', 'mi-conexion-externa' ),
+                'type'  => 'color',
+                'desc'  => __( 'Color del borde del campo de búsqueda', 'mi-conexion-externa' ),
+            ),
+            'placeholder_busqueda' => array(
+                'label' => __( 'Color de Texto Placeholder', 'mi-conexion-externa' ),
+                'type'  => 'color',
+                'desc'  => __( 'Color del texto placeholder en búsqueda', 'mi-conexion-externa' ),
+            ),
+            
+            // Filter Dropdown Styles
+            'color_texto_filtro' => array(
+                'label' => __( 'Color de Texto en Filtros', 'mi-conexion-externa' ),
+                'type'  => 'color',
+                'desc'  => __( 'Color del texto en los dropdowns de filtro', 'mi-conexion-externa' ),
+            ),
+            'color_fondo_filtro' => array(
+                'label' => __( 'Color de Fondo de Filtros', 'mi-conexion-externa' ),
+                'type'  => 'color',
+                'desc'  => __( 'Color de fondo de los dropdowns de filtro', 'mi-conexion-externa' ),
+            ),
+            'color_borde_filtro' => array(
+                'label' => __( 'Color de Borde de Filtros', 'mi-conexion-externa' ),
+                'type'  => 'color',
+                'desc'  => __( 'Color del borde de los dropdowns de filtro', 'mi-conexion-externa' ),
+            ),
+            
+            // Button Styles
+            'color_boton_buscar' => array(
+                'label' => __( 'Color del Botón Buscar', 'mi-conexion-externa' ),
+                'type'  => 'color',
+                'desc'  => __( 'Color de fondo del botón Buscar', 'mi-conexion-externa' ),
+            ),
+            'color_texto_boton_buscar' => array(
+                'label' => __( 'Color de Texto del Botón Buscar', 'mi-conexion-externa' ),
+                'type'  => 'color',
+                'desc'  => __( 'Color del texto del botón Buscar', 'mi-conexion-externa' ),
+            ),
+            'color_boton_buscar_hover' => array(
+                'label' => __( 'Color Hover del Botón Buscar', 'mi-conexion-externa' ),
+                'type'  => 'color',
+                'desc'  => __( 'Color del botón Buscar al pasar el cursor', 'mi-conexion-externa' ),
+            ),
+            'color_boton_limpiar' => array(
+                'label' => __( 'Color del Botón Limpiar', 'mi-conexion-externa' ),
+                'type'  => 'color',
+                'desc'  => __( 'Color de fondo del botón Limpiar', 'mi-conexion-externa' ),
+            ),
+            'color_texto_boton_limpiar' => array(
+                'label' => __( 'Color de Texto del Botón Limpiar', 'mi-conexion-externa' ),
+                'type'  => 'color',
+                'desc'  => __( 'Color del texto del botón Limpiar', 'mi-conexion-externa' ),
+            ),
+            'color_boton_limpiar_hover' => array(
+                'label' => __( 'Color Hover del Botón Limpiar', 'mi-conexion-externa' ),
+                'type'  => 'color',
+                'desc'  => __( 'Color del botón Limpiar al pasar el cursor', 'mi-conexion-externa' ),
+            ),
+            
+            // Results and Loading Styles
+            'color_info_resultados' => array(
+                'label' => __( 'Color de Info de Resultados', 'mi-conexion-externa' ),
+                'type'  => 'color',
+                'desc'  => __( 'Color del texto que muestra "Mostrando X-Y de Z resultados"', 'mi-conexion-externa' ),
+            ),
+            'color_loading' => array(
+                'label' => __( 'Color del Indicador de Carga', 'mi-conexion-externa' ),
+                'type'  => 'color',
+                'desc'  => __( 'Color del spinner y texto de carga', 'mi-conexion-externa' ),
+            ),
+            'color_error' => array(
+                'label' => __( 'Color de Mensajes de Error', 'mi-conexion-externa' ),
+                'type'  => 'color',
+                'desc'  => __( 'Color del texto en mensajes de error', 'mi-conexion-externa' ),
+            ),
         );
     }
 
@@ -147,7 +248,12 @@ class MCE_Style_Settings_Page {
     }
 
     public function section_description() {
-        echo '<p>' . esc_html__( 'Personaliza colores y tamaños principales de los elementos visuales de las tarjetas y grid en el frontend. Puedes dejar campos vacíos para usar los valores por defecto.', 'mi-conexion-externa' ) . '</p>';
+        echo '<p>' . esc_html__( 'Personaliza completamente el aspecto visual tanto de las tarjetas de datos como del sistema de búsqueda y filtros. Incluye configuración de colores, fondos, bordes y estados hover para todos los elementos interactivos.', 'mi-conexion-externa' ) . '</p>';
+        echo '<h4>' . esc_html__( '🎨 Cards y Contenido', 'mi-conexion-externa' ) . '</h4>';
+        echo '<p>' . esc_html__( 'Colores de títulos, etiquetas, valores y enlaces en las tarjetas de datos.', 'mi-conexion-externa' ) . '</p>';
+        echo '<h4>🔍 Sistema de Búsqueda y Filtros</h4>';
+        echo '<p>' . esc_html__( 'Personalización completa del buscador: fondo, campos de entrada, dropdowns de filtros, botones y estados interactivos.', 'mi-conexion-externa' ) . '</p>';
+        echo '<p><em>' . esc_html__( 'Puedes dejar campos vacíos para usar los valores por defecto.', 'mi-conexion-externa' ) . '</em></p>';
     }
 
     public function sanitize_settings( $input ) {
@@ -195,6 +301,8 @@ class MCE_Style_Settings_Page {
 
         $options = get_option( 'mce_style_settings', array() );
         $css = '';
+        
+        // Cards and Content Styles
         if ( ! empty( $options['color_titulo'] ) ) {
             $css .= "body .mce-producto-card .mce-card-title, html body .mce-producto-card .mce-card-title, .mce-card-title { color: {$options['color_titulo']} !important; }";
         }
@@ -216,10 +324,77 @@ class MCE_Style_Settings_Page {
         if ( ! empty( $options['sombra_card'] ) ) {
             $css .= "body .mce-producto-card, .mce-producto-card { box-shadow: {$options['sombra_card']} !important; }";
         }
+        
+        // Search Section Styles
+        if ( ! empty( $options['color_fondo_buscador'] ) ) {
+            $css .= "body .mce-controles-busqueda, .mce-controles-busqueda { background: {$options['color_fondo_buscador']} !important; }";
+        }
+        if ( ! empty( $options['borde_buscador'] ) ) {
+            $css .= "body .mce-controles-busqueda, .mce-controles-busqueda { border: 1px solid {$options['borde_buscador']} !important; }";
+        }
+        
+        // Search Input Styles
+        if ( ! empty( $options['color_texto_busqueda'] ) ) {
+            $css .= "body .mce-input-busqueda, .mce-input-busqueda { color: {$options['color_texto_busqueda']} !important; }";
+        }
+        if ( ! empty( $options['color_fondo_input'] ) ) {
+            $css .= "body .mce-input-busqueda, .mce-input-busqueda { background: {$options['color_fondo_input']} !important; }";
+        }
+        if ( ! empty( $options['color_borde_input'] ) ) {
+            $css .= "body .mce-input-busqueda, .mce-input-busqueda { border: 1px solid {$options['color_borde_input']} !important; }";
+        }
+        if ( ! empty( $options['placeholder_busqueda'] ) ) {
+            $css .= "body .mce-input-busqueda::placeholder, .mce-input-busqueda::placeholder { color: {$options['placeholder_busqueda']} !important; }";
+            $css .= "body .mce-input-busqueda::-webkit-input-placeholder, .mce-input-busqueda::-webkit-input-placeholder { color: {$options['placeholder_busqueda']} !important; }";
+            $css .= "body .mce-input-busqueda::-moz-placeholder, .mce-input-busqueda::-moz-placeholder { color: {$options['placeholder_busqueda']} !important; }";
+            $css .= "body .mce-input-busqueda:-ms-input-placeholder, .mce-input-busqueda:-ms-input-placeholder { color: {$options['placeholder_busqueda']} !important; }";
+        }
+        
+        // Filter Dropdown Styles
+        if ( ! empty( $options['color_texto_filtro'] ) ) {
+            $css .= "body .mce-filtro-select, .mce-filtro-select { color: {$options['color_texto_filtro']} !important; }";
+        }
+        if ( ! empty( $options['color_fondo_filtro'] ) ) {
+            $css .= "body .mce-filtro-select, .mce-filtro-select { background: {$options['color_fondo_filtro']} !important; }";
+        }
+        if ( ! empty( $options['color_borde_filtro'] ) ) {
+            $css .= "body .mce-filtro-select, .mce-filtro-select { border: 1px solid {$options['color_borde_filtro']} !important; }";
+        }
+        
+        // Button Styles
+        if ( ! empty( $options['color_boton_buscar'] ) ) {
+            $css .= "body .mce-btn-buscar, .mce-btn-buscar { background: {$options['color_boton_buscar']} !important; }";
+        }
+        if ( ! empty( $options['color_texto_boton_buscar'] ) ) {
+            $css .= "body .mce-btn-buscar, .mce-btn-buscar { color: {$options['color_texto_boton_buscar']} !important; }";
+        }
+        if ( ! empty( $options['color_boton_buscar_hover'] ) ) {
+            $css .= "body .mce-btn-buscar:hover, .mce-btn-buscar:hover { background: {$options['color_boton_buscar_hover']} !important; }";
+        }
+        if ( ! empty( $options['color_boton_limpiar'] ) ) {
+            $css .= "body .mce-btn-limpiar, .mce-btn-limpiar { background: {$options['color_boton_limpiar']} !important; }";
+        }
+        if ( ! empty( $options['color_texto_boton_limpiar'] ) ) {
+            $css .= "body .mce-btn-limpiar, .mce-btn-limpiar { color: {$options['color_texto_boton_limpiar']} !important; }";
+        }
+        if ( ! empty( $options['color_boton_limpiar_hover'] ) ) {
+            $css .= "body .mce-btn-limpiar:hover, .mce-btn-limpiar:hover { background: {$options['color_boton_limpiar_hover']} !important; }";
+        }
+        
+        // Results and Loading Styles
+        if ( ! empty( $options['color_info_resultados'] ) ) {
+            $css .= "body .mce-info-resultados, .mce-info-resultados { color: {$options['color_info_resultados']} !important; }";
+        }
+        if ( ! empty( $options['color_loading'] ) ) {
+            $css .= "body .mce-loading-overlay, .mce-loading-overlay { color: {$options['color_loading']} !important; }";
+            $css .= "body .mce-spinner, .mce-spinner { border-color: {$options['color_loading']} !important; }";
+        }
+        if ( ! empty( $options['color_error'] ) ) {
+            $css .= "body .mce-error-message, .mce-error-message { color: {$options['color_error']} !important; }";
+        }
+        
         if ( $css ) {
             echo '<style id="mce-custom-styles">' . $css . '</style>';
         }
     }
 }
-
-new MCE_Style_Settings_Page();

@@ -1,32 +1,75 @@
-LICENCIA DE SOFTWARE PROPIETARIO
+GNU GENERAL PUBLIC LICENSE
+Version 2, June 1991
+
+Copyright (C) 2025 CoreAura. All rights reserved.
+
 CoreAura: Conexión Externa
+Commercial WordPress Plugin
 
-Copyright (c) 2025 CoreAura. Todos los derechos reservados.
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
 
-TÉRMINOS Y CONDICIONES
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
 
-1. CONCESIÓN DE LICENCIA
-   CoreAura le concede una licencia no exclusiva, intransferible y limitada para 
-   usar este software en un (1) sitio web por cada licencia adquirida.
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
-2. RESTRICCIONES
-   Usted NO puede:
-   - Redistribuir, vender o arrendar el software
-   - Modificar, descompilar o realizar ingeniería inversa
-   - Usar el software en más sitios de los permitidos por su licencia
-   - Eliminar avisos de copyright o propiedad intelectual
+ADDITIONAL TERMS FOR COMMERCIAL PLUGIN
 
-3. SOPORTE Y ACTUALIZACIONES
-   - Soporte técnico incluido durante el período de licencia activa
-   - Actualizaciones automáticas mientras la licencia esté vigente
+This plugin is distributed under a dual licensing model:
 
-4. GARANTÍA LIMITADA
-   El software se proporciona "tal cual" sin garantías de ningún tipo.
+1. GPL v2+ License (as above): The source code is licensed under GPL v2+ 
+   allowing you to use, modify, and redistribute according to GPL terms.
 
-5. LIMITACIÓN DE RESPONSABILIDAD
-   CoreAura no será responsable por daños derivados del uso del software.
+2. Commercial License: CoreAura provides additional commercial rights
+   and services including:
+   - Professional support and technical assistance
+   - Updates and maintenance services
+   - Customization and feature development
+   - Distribution rights and usage permits
+   - Enhanced warranty and liability coverage
 
-6. TERMINACIÓN
-   Esta licencia termina automáticamente si viola cualquier término.
+COMMERCIAL USAGE TERMS
 
-Para consultas sobre licencias: licencias@coreaura.com
+While this plugin complies with GPL v2+ licensing, the following 
+commercial terms apply:
+
+- Purchase Required: A valid commercial license must be purchased
+  for production use, support, and updates.
+
+- Redistribution: Distribution of the plugin (even with GPL terms)
+  requires CoreAura's permission and agreement to commercial terms.
+
+- Support: Commercial support services are available only to 
+  licensed users.
+
+- Modifications: Custom modifications are permitted under GPL terms,
+  but support for modified versions is not guaranteed.
+
+For information about commercial licensing, updates, and support:
+- Email: licencias@coreaura.com
+- Website: https://coreaura.com/licencias
+- Documentation: See accompanying LICENSE-INFO.md file
+
+THIRD-PARTY COMPONENTS
+
+This plugin may include or reference third-party components 
+governed by their own licenses. See individual component headers
+for specific licensing information.
+
+LICENSING INQUIRIES
+
+For questions regarding licensing, compliance, or commercial terms:
+- Legal: legal@coreaura.com
+- Commercial: licencias@coreaura.com
+- Support: soporte@coreaura.com
+
+This dual licensing approach ensures compliance with open source
+principles while providing commercial value and support services
+that benefit both the user and the project development.
