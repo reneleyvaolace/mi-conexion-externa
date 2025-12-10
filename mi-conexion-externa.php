@@ -64,14 +64,8 @@ if (file_exists(MCE_PLUGIN_DIR . 'lib/plugin-update-checker/plugin-update-checke
         'mi-conexion-externa'
     );
 
-    // Token para repositorio privado
-    $mceUpdateChecker->setAuthentication('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');
-
     // Especificar la rama principal
     $mceUpdateChecker->setBranch('main');
-
-    // Habilitar releases de GitHub
-    $mceUpdateChecker->getVcsApi()->enableReleaseAssets();
 }
 
 // ===================================
