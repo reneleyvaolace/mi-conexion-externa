@@ -59,7 +59,7 @@ if (file_exists(MCE_PLUGIN_DIR . 'lib/plugin-update-checker/plugin-update-checke
     require_once MCE_PLUGIN_DIR . 'lib/plugin-update-checker/plugin-update-checker.php';
 
     $mceUpdateChecker = YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
-        'https://github.com/reneleyvaolace/coreaura-conexion-externa/',
+        'https://github.com/reneleyvaolace/mi-conexion-externa/',
         __FILE__,
         'mi-conexion-externa'
     );
