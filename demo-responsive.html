@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Responsive - Plugin MCE</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .demo-header {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .demo-header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .demo-header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .device-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+            color: #1976D2;
+        }
+
+        /* Estilos del Plugin MCE - Copiados del CSS original */
+        .mce-tabla-wrapper {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Grid Responsive con Auto-Fit */
+        .mce-productos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        /* Clases para controlar el número máximo de columnas */
+        .mce-grid-max-3 {
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+        }
+
+        @media (min-width: 768px) {
+            .mce-grid-max-3 {
+                grid-template-columns: repeat(auto-fit, minmax(280px, calc(33.333% - 14px)));
+            }
+        }
+
+        .mce-producto-card {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .mce-producto-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .mce-card-title {
+            color: #333;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 8px;
+        }
+
+        .mce-card-item {
+            margin-bottom: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .mce-card-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .mce-card-item strong {
+            color: #555;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 8px;
+            display: inline-block;
+            min-width: 80px;
+        }
+
+        .mce-card-item span {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .mce-pdf-link {
+            color: #2196F3;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 4px 8px;
+            background: #e3f2fd;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .mce-pdf-link:hover {
+            background: #2196F3;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        /* Responsive Design */
+        @media screen and (max-width: 768px) {
+            .mce-productos-grid,
+            .mce-grid-max-3 {
+                grid-template-columns: 1fr !important;
+                gap: 15px;
+                max-width: 100%;
+            }
+
+            .device-info {
+                background: #fff3cd;
+                color: #856404;
+            }
+        }
+
+        @media screen and (min-width: 769px) and (max-width: 1024px) {
+            .device-info {
+                background: #d1ecf1;
+                color: #0c5460;
+            }
+        }
+
+        .resize-instructions {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .resize-instructions strong {
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-header">
+        <h1>🎨 Demo Responsive - Plugin Mi Conexión Externa</h1>
+        <p>Esta página demuestra cómo el plugin se adapta automáticamente a diferentes tamaños de pantalla.</p>
+    </div>
+
+    <div class="resize-instructions">
+        <strong>📱 Instrucciones:</strong> Redimensiona la ventana del navegador para ver cómo las tarjetas se adaptan automáticamente. 
+        También puedes usar las herramientas de desarrollador (F12) para simular diferentes dispositivos.
+    </div>
+
+    <div class="device-info" id="deviceInfo">
+        Cargando información del dispositivo...
+    </div>
+
+    <div class="mce-tabla-wrapper">
+        <div class="mce-productos-grid mce-grid-max-3">
+            <!-- Tarjeta 1 -->
+            <div class="mce-producto-card">
+                <h3 class="mce-card-title">Sesión 5 - Diputación Permanente - Primer Receso - Primer Año de Ejercicio - LXIII Legislatura</h3>
+                <div class="mce-card-meta">
+                    <div class="mce-card-item">
+                        <strong>FECHA:</strong>
+                        <span>01/02/2017</span>
+                    </div>
+                    <div class="mce-card-item">
+                        <strong>ARCH1:</strong>
+                        <span><a href="#" class="mce-pdf-link">Ver PDF</a></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta 2 -->
+            <div class="mce-producto-card">
+                <h3 class="mce-card-title">Sesión Ordinaria 01 de marzo 2017 LXIII Legislatura</h3>
+                <div class="mce-card-meta">
+                    <div class="mce-card-item">
+                        <strong>FECHA:</strong>
+                        <span>01/03/2017</span>
+                    </div>
+                    <div class="mce-card-item">
+                        <strong>ARCH1:</strong>
+                        <span><a href="#" class="mce-pdf-link">Ver PDF</a></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta 3 -->
+            <div class="mce-producto-card">
+                <h3 class="mce-card-title">Sesión 109 - Segundo Periodo Ordinario - Segundo Año de Ejercicio Constitucional - LXIII Legislatura</h3>
+                <div class="mce-card-meta">
+                    <div class="mce-card-item">
+                        <strong>FECHA:</strong>
+                        <span>01/03/2018</span>
+                    </div>
+                    <div class="mce-card-item">
+                        <strong>ARCH1:</strong>
+                        <span><a href="#" class="mce-pdf-link">Ver PDF</a></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta 4 -->
+            <div class="mce-producto-card">
+                <h3 class="mce-card-title">Sesión Ordinaria 1o. de marzo de 2019 LXIV Legislatura</h3>
+                <div class="mce-card-meta">
+                    <div class="mce-card-item">
+                        <strong>FECHA:</strong>
+                        <span>01/03/2019</span>
+                    </div>
+                    <div class="mce-card-item">
+                        <strong>ARCH1:</strong>
+                        <span><a href="#" class="mce-pdf-link">Ver PDF</a></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta 5 -->
+            <div class="mce-producto-card">
+                <h3 class="mce-card-title">Sesión 109 - Segundo Periodo Ordinario - Segundo Año de Ejercicio Constitucional - LXIV Legislatura</h3>
+                <div class="mce-card-meta">
+                    <div class="mce-card-item">
+                        <strong>FECHA:</strong>
+                        <span>01/03/2020</span>
+                    </div>
+                    <div class="mce-card-item">
+                        <strong>ARCH1:</strong>
+                        <span><a href="#" class="mce-pdf-link">Ver PDF</a></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta 6 -->
+            <div class="mce-producto-card">
+                <h3 class="mce-card-title">Sesión 34 - Segundo Periodo Ordinario - Primer Año de Ejercicio Constitucional - LXV Legislatura</h3>
+                <div class="mce-card-meta">
+                    <div class="mce-card-item">
+                        <strong>FECHA:</strong>
+                        <span>01/03/2022</span>
+                    </div>
+                    <div class="mce-card-item">
+                        <strong>ARCH1:</strong>
+                        <span><a href="#" class="mce-pdf-link">Ver PDF</a></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta 7 -->
+            <div class="mce-producto-card">
+                <h3 class="mce-card-title">Sesión 111 - Segundo Periodo Ordinario - Segundo Año de Ejercicio Constitucional - LXV Legislatura</h3>
+                <div class="mce-card-meta">
+                    <div class="mce-card-item">
+                        <strong>FECHA:</strong>
+                        <span>01/03/2023</span>
+                    </div>
+                    <div class="mce-card-item">
+                        <strong>ARCH1:</strong>
+                        <span><a href="#" class="mce-pdf-link">Ver PDF</a></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta 8 -->
+            <div class="mce-producto-card">
+                <h3 class="mce-card-title">Sesión del 1 de marzo - Segundo Periodo Ordinario - Tercer Año de Ejercicio - LXV Legislatura.</h3>
+                <div class="mce-card-meta">
+                    <div class="mce-card-item">
+                        <strong>FECHA:</strong>
+                        <span>01/03/2024</span>
+                    </div>
+                    <div class="mce-card-item">
+                        <strong>ARCH1:</strong>
+                        <span><a href="#" class="mce-pdf-link">Ver PDF</a></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta 9 -->
+            <div class="mce-producto-card">
+                <h3 class="mce-card-title">Sesión 67 - Segundo Periodo Ordinario - Primer Año de Ejercicio Constitucional - LXVI Legislatura</h3>
+                <div class="mce-card-meta">
+                    <div class="mce-card-item">
+                        <strong>FECHA:</strong>
+                        <span>01/04/2025</span>
+                    </div>
+                    <div class="mce-card-item">
+                        <strong>ARCH1:</strong>
+                        <span><a href="#" class="mce-pdf-link">Ver PDF</a></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateDeviceInfo() {
+            const width = window.innerWidth;
+            const deviceInfo = document.getElementById('deviceInfo');
+            
+            let deviceType = '';
+            let columns = '';
+            
+            if (width < 768) {
+                deviceType = '📱 Móvil';
+                columns = '1 columna';
+            } else if (width >= 768 && width <= 1024) {
+                deviceType = '📱 Tablet';
+                columns = '2-3 columnas (adaptativo)';
+            } else {
+                deviceType = '🖥️ Desktop';
+                columns = '3 columnas';
+            }
+            
+            deviceInfo.innerHTML = `
+                <strong>${deviceType}</strong> | 
+                Ancho de pantalla: ${width}px | 
+                Mostrando: ${columns}
+            `;
+        }
+
+        // Actualizar al cargar y al redimensionar
+        updateDeviceInfo();
+        window.addEventListener('resize', updateDeviceInfo);
+    </script>
+</body>
+</html>

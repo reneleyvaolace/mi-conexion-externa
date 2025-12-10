@@ -5,6 +5,53 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.1.0] - 2025-12-09
+
+### Añadido
+- 📱 **Sistema de Diseño Completamente Responsive**: Las tarjetas ahora se adaptan automáticamente a todos los tamaños de pantalla
+- 🎯 **Grid Adaptativo con CSS Grid Auto-Fit**: Utiliza tecnología moderna de CSS Grid para distribución inteligente
+- 📐 **Clases CSS Personalizadas**: Nuevas clases `.mce-grid-max-1` hasta `.mce-grid-max-6` para control preciso
+- 📖 **Documentación Responsive**: Nuevo archivo `RESPONSIVE-DESIGN.md` con guía completa de uso
+
+### Cambiado
+- 🔄 **Parámetro `columnas` Redefinido**: Ahora define el número MÁXIMO de columnas en pantallas grandes
+- 📱 **Breakpoints Optimizados**: Móviles (<768px) muestran 1 columna, tablets adaptan según espacio
+- 🎨 **Grid CSS Mejorado**: Cambio de `repeat(N, 1fr)` a `repeat(auto-fit, minmax(280px, 1fr))`
+
+### Mejorado
+- ✨ **Experiencia Móvil**: Tarjetas ahora son completamente legibles en smartphones
+- 🖥️ **Experiencia Desktop**: Respeta el número de columnas especificado como máximo
+- 📊 **Distribución Inteligente**: Las tarjetas se distribuyen automáticamente según espacio disponible
+- 🎯 **Compatibilidad**: Funciona en todos los navegadores modernos sin JavaScript adicional
+
+### Técnico
+- Implementación de CSS Grid con `auto-fit` y `minmax()`
+- Media queries optimizadas para breakpoints estándar (768px)
+- Ancho mínimo de tarjetas establecido en 280px
+- Clases CSS dinámicas generadas en PHP
+- Retrocompatibilidad total con shortcodes existentes
+
+---
+
+## [2.0.0] - 2025-11-19
+
+### Añadido
+- 🛠️ **Herramientas de Debug Avanzadas**: Nueva sección completa en la página de configuración de caché
+- 🔍 **Prueba de Conexión**: Botón para verificar la conectividad con la base de datos externa
+- 📋 **Listado de Tablas**: Herramienta para ver todas las tablas disponibles en la DB externa
+- ⚡ **Ejecutor de Consultas**: Permite ejecutar consultas SELECT personalizadas de forma segura
+- 📊 **Resultados en Tiempo Real**: Feedback inmediato de todas las operaciones de debug
+
+### Corregido
+- 🧭 **Menú de Caché**: Solucionado problema donde el submenú "Caché" no aparecía en el admin
+- 🔧 **Inicialización de Componentes**: Corregida la carga secuencial de clases para asegurar que todos los menús se registren correctamente
+
+### Mejorado
+- 🎯 **Experiencia de Usuario**: Mejor navegación y acceso a herramientas de diagnóstico
+- 📈 **Mantenibilidad**: Código más organizado y robusto para futuras expansiones
+
+---
+
 ## [1.2.0] - 2025-11-11
 
 ### Añadido

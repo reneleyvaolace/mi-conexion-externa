@@ -1,14 +1,14 @@
 === CoreAura: Conexión Externa ===
 Contributors: CoreAura
-Tags: database, external database, mysql, data display, ajax pagination
+Tags: database, external database, mysql, data display, ajax pagination, responsive
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 2.1.0
 License: Proprietary
 License URI: https://coreaura.com/licencia
 
-Plugin profesional para conectar, explorar y mostrar datos de bases de datos externas MySQL/MariaDB con grids personalizables y paginación AJAX.
+Plugin profesional para conectar, explorar y mostrar datos de bases de datos externas MySQL/MariaDB con grids personalizables, paginación AJAX y diseño completamente responsive.
 
 == Descripción ==
 
@@ -21,7 +21,7 @@ CoreAura: Conexión Externa es un plugin premium diseñado para conectar WordPre
 * **Shortcode Universal** - `[mce_mostrar_tabla]` con múltiples parámetros personalizables
 * **Paginación AJAX** - Navegación fluida sin recarga de página
 * **Panel de Estilos** - Personaliza colores, tamaños y diseño visual desde el admin
-* **Responsive** - Diseño adaptable a todos los dispositivos
+* **Diseño Responsive** - Grid adaptativo que se ajusta automáticamente a móviles, tablets y desktop
 * **Seguro** - Sanitización completa, nonces y validación de permisos
 * **Optimizado** - Carga condicional de assets y consultas eficientes
 * **Integración Total** - Compatible con Gutenberg y Elementor Free
