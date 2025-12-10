@@ -5,6 +5,20 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.1.1] - 2025-12-09
+
+### Corregido
+- 🐛 **Error en Filtros AJAX**: Solucionado error "Error al obtener datos filtrados" que ocurría cuando la tabla no tenía una columna llamada 'id'
+- 🔧 **Ordenamiento Dinámico**: Ahora el sistema usa la primera columna disponible de la tabla para ordenar, en lugar de asumir que existe 'id'
+- 📊 **Mensajes de Error Mejorados**: Los errores de filtrado ahora muestran el mensaje específico del error de base de datos para facilitar el diagnóstico
+
+### Técnico
+- Modificada función `mce_buscar_filtrar_ajax()` para obtener dinámicamente la primera columna de la tabla
+- Agregado logging mejorado con `get_last_error()` para diagnóstico
+- Mejorado manejo de errores en búsqueda y filtros AJAX
+
+---
+
 ## [2.1.0] - 2025-12-09
 
 ### Añadido

@@ -4,7 +4,7 @@
  * Plugin Name: CoreAura: Conexión Externa
  * Plugin URI: https://coreaura.com/plugins/conexion-externa
  * Description: Plugin profesional para conectar bases de datos externas MySQL/MariaDB y mostrar información con grids personalizables, búsqueda en tiempo real, filtros AJAX, paginación y panel de estilos visual.
- * Version: 2.1.0
+ * Version: 2.1.1
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: CoreAura
@@ -37,7 +37,7 @@ if (! defined('ABSPATH')) {
 // CONSTANTES DEL PLUGIN
 // ===================================
 
-define('MCE_VERSION', '2.1.0');
+define('MCE_VERSION', '2.1.1');
 define('MCE_PLUGIN_FILE', __FILE__);
 define('MCE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MCE_PLUGIN_URL', plugin_dir_url(__FILE__));

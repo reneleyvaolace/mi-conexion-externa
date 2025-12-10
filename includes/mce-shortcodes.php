@@ -580,10 +580,17 @@ function mce_buscar_filtrar_ajax()
 
     // Get filtered data (remove WHERE from the clause since obtener_datos adds it)
     $where_conditions_only = str_replace(array('WHERE ', 'where '), '', $where_clause);
-    $datos = $db_handler->obtener_datos($tabla, '*', $where_conditions_only, 'id', 'ASC', $limite, 0);
+    
+    // Get the first column name for ordering (or leave empty if none available)
+    $columnas_tabla = $db_handler->obtener_columnas_tabla($tabla);
+    $orden_columna = !empty($columnas_tabla) ? $columnas_tabla[0] : '';
+    
+    $datos = $db_handler->obtener_datos($tabla, '*', $where_conditions_only, $orden_columna, 'ASC', $limite, 0);
 
     if ($datos === false) {
-        wp_send_json_error(array('message' => 'Error al obtener datos filtrados'));
+        $last_error = $db_handler->get_last_error();
+        error_log('MCE buscar_filtrar_ajax Error: ' . $last_error);
+        wp_send_json_error(array('message' => 'Error al obtener datos filtrados: ' . $last_error));
         return;
     }
 
